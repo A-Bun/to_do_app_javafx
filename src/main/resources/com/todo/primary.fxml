@@ -9,38 +9,85 @@
 <?import javafx.scene.control.ScrollBar?>
 <?import javafx.geometry.Insets?>
 
-<HBox  spacing="20.0" fillHeight="true" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:id="full_page" fx:controller="com.todo.PrimaryController">
+<HBox spacing="0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" styleClass="full_page" fx:controller="com.todo.PrimaryController">
    <children>
-      <ScrollPane fx:id="scrollpane" HBox.hgrow="ALWAYS" minHeight="200" minWidth="200" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER">
-         <content>
-            <VBox HBox.hgrow="ALWAYS" fillWidth="true" alignment="TOP_LEFT" fx:id="list_container">
-               <children>
-                  <HBox fx:id="all_lists_header" spacing="20.0">
+      <HBox alignment="CENTER" spacing="20.0" fillHeight="true" HBox.hgrow="ALWAYS" styleClass="full_page">
+         <children>
+            <ScrollPane fx:id="scrollpane" HBox.hgrow="ALWAYS" minHeight="200" minWidth="200" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER">
+               <content>
+                  <VBox fillWidth="true" alignment="TOP_LEFT" fx:id="list_container">
                      <children>
-                        <Label fx:id="all_lists_label" text="To-Do Lists" />
-                        <Button fx:id="all_lists_edit" text="Edit" onAction="#handleEditAction"/>
+                        <HBox fx:id="all_lists_header" spacing="20.0">
+                           <children>
+                              <Label fx:id="all_lists_label" text="To-Do Lists" />
+                              <Button fx:id="all_lists_edit" text="Edit" onAction="#handleEditAction"/>
+                           </children>
+                        </HBox>
+                        <HBox fillHeight="true" maxWidth="${list_container.width}">
+                           <children>
+                              <Button fx:id ="primaryButton" styleClass="container_child" text="Christmas" onAction="#switchToSecondary"/>
+                           </children>
+                        </HBox>
+                        <HBox fillHeight="true" maxWidth="${list_container.width}">
+                           <children>
+                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
+                           </children>
+                        </HBox>
+                        <HBox fillHeight="true" maxWidth="${list_container.width}">
+                           <children>
+                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
+                           </children>
+                        </HBox>
+                        <HBox fillHeight="true" maxWidth="${list_container.width}">
+                           <children>
+                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
+                           </children>
+                        </HBox>
+                        <HBox fillHeight="true" maxWidth="${list_container.width}">
+                           <children>
+                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
+                           </children>
+                        </HBox>
+                        <HBox fillHeight="true" maxWidth="${list_container.width}">
+                           <children>
+                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
+                           </children>
+                        </HBox>
+                        <HBox fillHeight="true" maxWidth="${list_container.width}">
+                           <children>
+                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
+                           </children>
+                        </HBox>
+                        <HBox fillHeight="true" maxWidth="${list_container.width}">
+                           <children>
+                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
+                           </children>
+                        </HBox>
+                        <HBox fillHeight="true" maxWidth="${list_container.width}">
+                           <children>
+                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
+                           </children>
+                        </HBox>
+                        <HBox fillHeight="true" maxWidth="${list_container.width}">
+                           <children>
+                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
+                           </children>
+                        </HBox>
                      </children>
-                  </HBox>
-                  <HBox fillHeight="true" maxWidth="${list_container.width}">
-                     <children>
-                        <Button fx:id ="primaryButton" styleClass="container_child" text="Christmas" onAction="#switchToSecondary"/>
-                     </children>
-                  </HBox>
-                  <HBox fillHeight="true" maxWidth="${list_container.width}">
-                     <children>
-                        <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
-                     </children>
-                  </HBox>
-               </children>
-               <padding>
-                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-               </padding>
-            </VBox>
-         </content>
-      </ScrollPane>
+                     <padding>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                     </padding>
+                  </VBox>
+               </content>
+            </ScrollPane>
+         </children>
+         <padding>
+            <Insets top="100.0" right="52.0" bottom="100.0" left="200.0" />
+         </padding>
+      </HBox>
       <Button fx:id="global_settings" text="Settings"/>
    </children>
    <padding>
-      <Insets bottom="100.0" left="200.0" right="200.0" top="100.0" />
+      <Insets top="20.0" right="20.0" bottom="0" left="0" />
    </padding>
 </HBox>

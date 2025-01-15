@@ -7,28 +7,40 @@ import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class PrimaryController implements Initializable{
     @FXML private VBox list_container;
-    @FXML private Button global_settings;
     @FXML private Button all_lists_edit;
+    @FXML private Button global_settings;
     private Boolean editing = false;
     private int cntr;
 
     @FXML
     @Override
     // implementing Initializable allows the fxml to be dynamically updated
-    public void initialize(URL location, ResourceBundle resources) {
-        global_settings.setAlignment(Pos.TOP_RIGHT); // TO-DO: Figure out how to get Settings button in Top Right of screen
+    public void initialize(URL location, ResourceBundle resources) { // TO-DO: Figure out how to get Settings button in Top Right of screen
         HBox new_list_trigger_box = new HBox();
         Button new_list_trigger = new Button("+ Create New List");
         new_list_trigger.getStyleClass().add("container_child");
         new_list_trigger.setStyle("-fx-border-width:0px;");
+
+        Image settings = new Image(App.class.getResource("images/whiteGears.png").toExternalForm());
+        ImageView iv1 = new ImageView();
+        iv1.setImage(settings);
+        iv1.setPreserveRatio(true);
+        iv1.setSmooth(true);
+        iv1.setFitWidth(40);
+        global_settings.setGraphic(iv1);
+
+        global_settings.setOnAction((ActionEvent e) -> {
+            System.out.println("Global: " + global_settings.getWidth());
+        });
         
         new_list_trigger.setOnAction((ActionEvent e) -> {
             all_lists_edit.setDisable(true);
@@ -50,7 +62,7 @@ public class PrimaryController implements Initializable{
                 if(!list_name.getText().isBlank()) {
                     all_lists_edit.setDisable(false);
                     new_list_trigger.setDisable(false);
-                    new_list.setText(list_name.getText());
+                    new_list.setText(list_name.getText().trim());
                     createNewList(new_list_box, new_list);
                     new_list_box.getChildren().remove(list_name);
                 }
@@ -99,7 +111,7 @@ public class PrimaryController implements Initializable{
 
             Button list_button = (Button)child_list_hbox.getChildren().get(0);
 
-            TextField rename_list = new TextField(list_button.getText());
+            TextField rename_list = new TextField(list_button.getText().trim());
             rename_list.getStyleClass().add("container_child");
             child_list_hbox.getChildren().add(rename_list);
 
@@ -142,6 +154,10 @@ public class PrimaryController implements Initializable{
         }
 
         list_container.getChildren().get(list_container.getChildren().size()-1).setDisable(false);
+
+        if(list_container.getChildren().size() <= 2) {
+            all_lists_edit.setDisable(true);
+        }
     }
 
 }

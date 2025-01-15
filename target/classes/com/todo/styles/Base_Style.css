@@ -1,6 +1,24 @@
-#full_page {
+.full_page {
     -fx-background-color: rgb(7, 7, 63);
     background-color: rgb(7, 7, 63);
+}
+
+#global_settings {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 1.5em;
+    -fx-font-weight: bold;
+    -fx-padding: 7px 10px 5px 5px;
+    background-color: transparent;
+    color: white;
+    font-size: 1.5em;
+    font-weight: bold;
+    padding: 7px 10px 5px 5px;
+}
+
+#global_settings:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.192);
+    background-color: rgba(255, 255, 255, 0.192);
 }
 
 #list_container, ScrollPane, ScrollPane > .scroll-bar, .corner, .track, .increment-button, .decrement-button {
