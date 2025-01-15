@@ -70,7 +70,7 @@ ScrollPane > .scroll-bar .thumb {
     color: white;
 }
 
-#all_lists_edit {
+.edit_button {
     -fx-background-color: rgb(92, 2, 92);
     -fx-text-fill: white;
     -fx-wrap-text: true;
@@ -84,7 +84,45 @@ ScrollPane > .scroll-bar .thumb {
     border-width: 0px;
 }
 
-#all_lists_edit:hover {
+.edit_button:hover {
     -fx-background-color: rgb(63, 2, 63);
     background-color: rgb(63, 2, 63);
+}
+
+.edit_button_on {
+    -fx-background-color: rgb(78, 2, 15);
+    -fx-text-fill: white;
+    -fx-wrap-text: true;
+    -fx-padding: 10px;
+    -fx-border-width: 0px;
+    background-color: rgb(78, 2, 15);
+    color: white;
+    overflow: visible;
+    text-wrap: wrap;
+    padding: 10px;
+    border-width: 0px;
+}
+
+.edit_button_on:hover {
+    -fx-background-color: rgb(65, 2, 15);
+    background-color: rgba(65, 2, 15);
+}
+
+.delete_button {
+    -fx-background-color: rgb(145, 0, 0);
+    -fx-text-fill: white;
+    -fx-alignment: BOTTOM-LEFT;
+    -fx-border-width: 0px 0px 1px 0px;
+    -fx-border-color: white;
+    background-color: rgb(145, 0, 0);
+    color: white;
+    border-width: 0px 0px 1px 0px;
+    border-color: white;
+}
+
+.delete_button:hover {
+    -fx-background-color: rgb(99, 0, 0);
+    -fx-text-fill: white;
+    background-color: rgb(99, 0, 0);
+    color: white;
 }

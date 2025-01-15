@@ -20,52 +20,12 @@
                         <HBox fx:id="all_lists_header" spacing="20.0">
                            <children>
                               <Label fx:id="all_lists_label" text="To-Do Lists" />
-                              <Button fx:id="all_lists_edit" text="Edit" onAction="#handleEditAction"/>
+                              <Button fx:id="all_lists_edit" styleClass="edit_button" text="Edit" onAction="#handleEditAction"/>
                            </children>
                         </HBox>
                         <HBox fillHeight="true" maxWidth="${list_container.width}">
                            <children>
                               <Button fx:id ="primaryButton" styleClass="container_child" text="Christmas" onAction="#switchToSecondary"/>
-                           </children>
-                        </HBox>
-                        <HBox fillHeight="true" maxWidth="${list_container.width}">
-                           <children>
-                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
-                           </children>
-                        </HBox>
-                        <HBox fillHeight="true" maxWidth="${list_container.width}">
-                           <children>
-                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
-                           </children>
-                        </HBox>
-                        <HBox fillHeight="true" maxWidth="${list_container.width}">
-                           <children>
-                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
-                           </children>
-                        </HBox>
-                        <HBox fillHeight="true" maxWidth="${list_container.width}">
-                           <children>
-                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
-                           </children>
-                        </HBox>
-                        <HBox fillHeight="true" maxWidth="${list_container.width}">
-                           <children>
-                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
-                           </children>
-                        </HBox>
-                        <HBox fillHeight="true" maxWidth="${list_container.width}">
-                           <children>
-                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
-                           </children>
-                        </HBox>
-                        <HBox fillHeight="true" maxWidth="${list_container.width}">
-                           <children>
-                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
-                           </children>
-                        </HBox>
-                        <HBox fillHeight="true" maxWidth="${list_container.width}">
-                           <children>
-                              <Button fx:id="primaryButton" styleClass="container_child" text="Daily" onAction="#switchToSecondary"/>
                            </children>
                         </HBox>
                         <HBox fillHeight="true" maxWidth="${list_container.width}">
