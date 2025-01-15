@@ -1,0 +1,72 @@
+#full_page {
+    -fx-background-color: rgb(7, 7, 63);
+    background-color: rgb(7, 7, 63);
+}
+
+#list_container, ScrollPane, ScrollPane > .scroll-bar, .corner, .track, .increment-button, .decrement-button {
+    -fx-background-color: rgb(92, 2, 92);
+    background-color: rgb(92, 2, 92);
+}
+
+ScrollPane > .scroll-bar .thumb {
+    -fx-background-color: rgb(78, 2, 78);
+    background-color: rgb(78, 2, 78);
+}
+
+.container_child {
+    -fx-background-color: rgb(92, 2, 92);
+    -fx-text-fill: white;
+    -fx-wrap-text: true;
+    -fx-padding: 10px 10px 10px 5px;
+    -fx-alignment: CENTER-LEFT;
+    -fx-border-width: 0px 0px 1px 0px;
+    -fx-border-color: white;
+    background-color: rgb(92, 2, 92);
+    color: white;
+    overflow: visible;
+    text-wrap: wrap;
+    padding: 10px 10px 10px 5px;
+    text-align: left;
+    border-width: 0px 0px 1px 0px;
+    border-color: white;
+}
+
+.container_child:hover {
+    -fx-background-color: rgb(63, 2, 63);
+    background-color: rgb(63, 2, 63);
+}
+
+#all_lists_header {
+    -fx-padding: 5px;
+    -fx-border-width: 0px 0px 1px 0px;
+    -fx-border-color: white;
+    padding: 5px;
+    border-width: 0px 0px 1px 0px;
+    border-color: white;
+}
+
+#all_lists_label {
+    -fx-font-size: 2em;
+    -fx-text-fill: white;
+    font-size: 2em;
+    color: white;
+}
+
+#all_lists_edit {
+    -fx-background-color: rgb(92, 2, 92);
+    -fx-text-fill: white;
+    -fx-wrap-text: true;
+    -fx-padding: 10px;
+    -fx-border-width: 0px;
+    background-color: rgb(92, 2, 92);
+    color: white;
+    overflow: visible;
+    text-wrap: wrap;
+    padding: 10px;
+    border-width: 0px;
+}
+
+#all_lists_edit:hover {
+    -fx-background-color: rgb(63, 2, 63);
+    background-color: rgb(63, 2, 63);
+}
