@@ -15,7 +15,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public class PrimaryController implements Initializable{
+public class AllListsController implements Initializable{
     @FXML private VBox list_container;
     @FXML private Button all_lists_edit;
     @FXML private Button global_settings;
@@ -29,8 +29,8 @@ public class PrimaryController implements Initializable{
     public void initialize(URL location, ResourceBundle resources) { // TO-DO: Figure out how to get Settings button in Top Right of screen
         HBox new_list_trigger_box = new HBox();
         Button new_list_trigger = new Button("+ Create New List");
-        new_list_trigger.getStyleClass().add("container_child");
-        new_list_trigger.setStyle("-fx-border-width:0px;");
+        new_list_trigger.getStyleClass().add("container_sub_child");
+        // new_list_trigger.setStyle("-fx-border-width:0px;");
 
         Image settings = new Image(App.class.getResource("images/whiteGears.png").toExternalForm());
         ImageView iv1 = new ImageView();
@@ -49,25 +49,26 @@ public class PrimaryController implements Initializable{
             new_list_trigger.setDisable(true);
             HBox new_list_box = new HBox();
             new_list_box.setFillHeight(true);
-            new_list_box.setMaxWidth(list_container.getWidth());
+            new_list_box.getStyleClass().add("container_sub");
             new_list_box.setAlignment(Pos.CENTER_LEFT);
-            new_list_box.setSpacing(5);
-            Button new_list = new Button();
             Button remove_new_list = new Button();
-            new_list.getStyleClass().add("container_child");
             remove_new_list.getStyleClass().add("delete_button");
-            new_list.setOnAction((ActionEvent ae) -> {
-                try {
-                    switchToSecondary();
-                } catch (IOException e1) {
-            }});
             remove_new_list.setText("X");
+            new_list_box.getChildren().add(remove_new_list);
 
             TextField list_name = new TextField();
             list_name.setPromptText("Enter new list title here...");
-            list_name.getStyleClass().add("container_child");
+            list_name.getStyleClass().add("container_sub_child_tf");
             list_name.setOnAction((ActionEvent ae) -> {
                 if(!list_name.getText().isBlank()) {
+                    Button new_list = new Button();
+                    new_list.getStyleClass().add("container_sub_child");
+                    new_list.setMinWidth(new_list_box.getWidth());
+                    new_list.setOnAction((ActionEvent sae) -> {
+                        try {
+                            switchToSpecificListView();
+                        } catch (IOException e1) {
+                    }});
                     all_lists_edit.setDisable(false);
                     new_list_trigger.setDisable(false);
                     new_list.setText(list_name.getText().trim());
@@ -87,7 +88,7 @@ public class PrimaryController implements Initializable{
                 new_list_trigger.setDisable(false);
             });
 
-            new_list_box.getChildren().addAll(remove_new_list, list_name);
+            new_list_box.getChildren().add(list_name);
 
             list_container.getChildren().add(list_container.getChildren().size()-1, new_list_box);
         });
@@ -98,8 +99,8 @@ public class PrimaryController implements Initializable{
     
     @FXML
     @SuppressWarnings("unused")
-    private void switchToSecondary() throws IOException {
-        App.setRoot("secondary");
+    private void switchToSpecificListView() throws IOException {
+        App.setRoot("SpecificListView");
     }
 
     @FXML
@@ -130,22 +131,24 @@ public class PrimaryController implements Initializable{
         for (cntr = 1; cntr < list_container.getChildren().size()-1; cntr++) {
             HBox child_list_hbox = (HBox)list_container.getChildren().get(cntr);
 
-            Button list_button = (Button)child_list_hbox.getChildren().get(0);
+            String list_name = ((Button)child_list_hbox.getChildren().get(0)).getText();
+            child_list_hbox.getChildren().remove(0);
 
-            TextField rename_list = new TextField(list_button.getText().trim());
-            rename_list.getStyleClass().add("container_child");
-            child_list_hbox.getChildren().add(rename_list);
-
-            list_button.setText("X");
-            list_button.getStyleClass().remove(list_button.getStyleClass().size()-1);
-            list_button.getStyleClass().add("delete_button");
-            list_button.setOnAction((ActionEvent e) -> {
+            Button delete_button = new Button();
+            delete_button.setText("X");
+            delete_button.getStyleClass().add("delete_button");
+            child_list_hbox.getChildren().add(delete_button);
+            delete_button.setOnAction((ActionEvent e) -> {
                 list_container.getChildren().remove(child_list_hbox);
                 if(list_container.getChildren().size() <= container_cnt) {
                     editing = !editing;
                     concludeEditMode();
                 }
             });
+
+            TextField rename_list = new TextField(list_name.trim());
+            rename_list.getStyleClass().add("container_sub_child_tf");
+            child_list_hbox.getChildren().add(rename_list);
         }
     }
 
@@ -172,11 +175,12 @@ public class PrimaryController implements Initializable{
             TextField renamed_list = (TextField)child_list_hbox.getChildren().get(child_list_hbox.getChildren().size()-1);
 
             list_button.setText(renamed_list.getText());
+            list_button.setMinWidth(child_list_hbox.getWidth());
             list_button.getStyleClass().remove(list_button.getStyleClass().size()-1);
-            list_button.getStyleClass().add("container_child");
+            list_button.getStyleClass().add("container_sub_child");
             list_button.setOnAction((ActionEvent e) -> {
                 try {
-                    switchToSecondary();
+                    switchToSpecificListView();
                 } catch (IOException e1) {
             }});
 

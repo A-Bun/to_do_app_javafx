@@ -17,7 +17,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("primary"), 800, 600);
+        scene = new Scene(loadFXML("AllListsView"), 800, 600);
         scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
         stage.setScene(scene);
         stage.setTitle("To-Do Tracker");
