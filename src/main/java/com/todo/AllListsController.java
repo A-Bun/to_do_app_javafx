@@ -16,6 +16,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class AllListsController implements Initializable{
+    SQLController db = new SQLController();
     @FXML private VBox list_container;
     @FXML private Button all_lists_edit;
     @FXML private Button global_settings;
@@ -26,7 +27,18 @@ public class AllListsController implements Initializable{
     @FXML
     @Override
     // implementing Initializable allows the fxml to be dynamically updated
-    public void initialize(URL location, ResourceBundle resources) { // TO-DO: Figure out how to get Settings button in Top Right of screen
+    public void initialize(URL location, ResourceBundle resources) {
+        // db.openConnection();
+        // Map<String, ArrayList<String>> all_lists = db.getAllLists();
+        // db.closeConnection();
+
+        /* TO-DO: Get stored lists into scene
+         *      - For each key in map.keySet(), create an hbox and a button
+         *      - The button text should match the current key's name
+         *      - The user should still have the ability to create a new list, but it won't be saved
+         */
+
+        // all_lists.split("");
         HBox new_list_trigger_box = new HBox();
         Button new_list_trigger = new Button("+ Create New List");
         new_list_trigger.getStyleClass().add("container_sub_child");
@@ -42,6 +54,7 @@ public class AllListsController implements Initializable{
 
         global_settings.setOnAction((ActionEvent e) -> {
             System.out.println("Global: " + global_settings.getWidth());
+            db.openConnection();
         });
         
         new_list_trigger.setOnAction((ActionEvent e) -> {
