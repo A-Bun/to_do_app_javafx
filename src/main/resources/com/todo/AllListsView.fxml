@@ -23,16 +23,6 @@
                               <Button fx:id="all_lists_edit" styleClass="edit_button" text="Edit" onAction="#handleEditAction"/>
                            </children>
                         </HBox>
-                        <HBox fillHeight="true" styleClass="container_sub">
-                           <children>
-                              <Button fx:id ="specificListButton" minWidth="${specificListButton.parent.width}" text="Christmas" onAction="#switchToSpecificListView" styleClass="container_sub_child"/>
-                           </children>
-                        </HBox>
-                        <HBox fillHeight="true" styleClass="container_sub">
-                           <children>
-                              <Button fx:id ="specificListButton" minWidth="${specificListButton.parent.width}" text="Daily" onAction="#switchToSpecificListView" styleClass="container_sub_child"/>
-                           </children>
-                        </HBox>
                      </children>
                      <padding>
                         <Insets top="20.0" right="20.0" bottom="20.0" left="20.0" />
@@ -45,7 +35,7 @@
             <Insets top="80.0" right="52.0" bottom="100.0" left="200.0" />
          </padding>
       </HBox>
-      <Button fx:id="global_settings" text="Settings"/>
+      <Button fx:id="global_settings" text="Close DB"/>
    </children>
    <padding>
       <Insets top="20.0" right="20.0" bottom="0" left="0" />

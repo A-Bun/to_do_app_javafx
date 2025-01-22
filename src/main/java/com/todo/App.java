@@ -14,9 +14,11 @@ import javafx.stage.Stage;
 public class App extends Application {
 
     private static Scene scene;
+    private final static SQLController sqlctrl = new SQLController();
 
     @Override
     public void start(Stage stage) throws IOException {
+        sqlctrl.openConnection();
         scene = new Scene(loadFXML("AllListsView"), 800, 600);
         scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
         stage.setScene(scene);
@@ -32,6 +34,10 @@ public class App extends Application {
     private static Parent loadFXML(String fxml) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
         return fxmlLoader.load();
+    }
+
+    static SQLController getSQLController() {
+        return sqlctrl;
     }
 
     public static void main(String[] args) {

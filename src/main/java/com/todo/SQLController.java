@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bson.BsonDocument;
+import org.bson.BsonString;
 import org.bson.Document;
 
 import com.mongodb.client.FindIterable;
@@ -14,13 +16,13 @@ import com.mongodb.client.MongoDatabase;
 
 public class SQLController {
 
-    //Put you connection string with pw, user, ... here
+    // Database direct connection string
     private static final String CONNECTION_STRING = "mongodb+srv://alexisp30ples:v77s8ZhiG2lQ48KV@to-do-cluster-1.efhkz.mongodb.net/?retryWrites=true&w=majority&appName=To-Do-Cluster-1"; 
 
     private MongoClient mongoClient;
     private MongoCollection<Document> collection;
 
- 
+    /* Open a new connection to the database */
     public boolean openConnection() {
         boolean result;
         try {
@@ -36,6 +38,7 @@ public class SQLController {
         return result;
     }
  
+    /* Close the existing connection to the database */
     public boolean closeConnection() {
         boolean result;
         try {
@@ -49,6 +52,7 @@ public class SQLController {
         return result;
     }
 
+    /* Get all lists and their items from the database */
     public Map<String, ArrayList<String>> getAllLists() {
         /* Key: Title; Value: Items
          * ex. Christmas: [Buy Gifts, Wrap Gifts, Hide Gifts, Transport Gifts]
@@ -66,7 +70,42 @@ public class SQLController {
 
         return lists;
     }
+
+    /* Get all lists (names only) from the database */
+    public ArrayList<String> getAllListNames() {
+        ArrayList<String> lists = new ArrayList<>();
+
+        FindIterable<Document> docs = collection.find();
+
+        for(Document doc : docs) {
+            String title = doc.get("title").toString();
+            lists.add(title);
+        }
+
+        return lists;
+    }
+
+    /* Get all items from the list with the provided name from the database*/
+    public ArrayList<String> getList(String list_name) {
+        ArrayList<String> list = new ArrayList<>();
+
+        // BsonDocument filter = new BsonDocument();
+        BsonString str = new BsonString(list_name);
+        BsonDocument filter = new BsonDocument("title", str);
+
+        Document doc = collection.find(filter).first();
+
+        if(doc != null) {
+            list = doc.get("items", new ArrayList<>());
+        }
+        else {
+            System.err.println("ERROR: List \"" + list_name + "\" does not exist...");
+        }
+
+        return list;
+    }
  
+    /* TO BE DELETED */
     public String example(){
         String result;
         ArrayList<String> items;

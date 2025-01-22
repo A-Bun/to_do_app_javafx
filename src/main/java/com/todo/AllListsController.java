@@ -2,6 +2,7 @@ package com.todo;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
@@ -16,7 +17,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class AllListsController implements Initializable{
-    SQLController db = new SQLController();
+    SQLController db;
     @FXML private VBox list_container;
     @FXML private Button all_lists_edit;
     @FXML private Button global_settings;
@@ -26,19 +27,35 @@ public class AllListsController implements Initializable{
 
     @FXML
     @Override
-    // implementing Initializable allows the fxml to be dynamically updated
+    // implementing Initializable allows the fxml to be initialized with additional objects once
     public void initialize(URL location, ResourceBundle resources) {
-        // db.openConnection();
-        // Map<String, ArrayList<String>> all_lists = db.getAllLists();
-        // db.closeConnection();
+        db = App.getSQLController();
 
-        /* TO-DO: Get stored lists into scene
-         *      - For each key in map.keySet(), create an hbox and a button
-         *      - The button text should match the current key's name
-         *      - The user should still have the ability to create a new list, but it won't be saved
-         */
+        // Map<String, ArrayList<String>> all_lists = db.getAllLists();        
+        // Object[] list_array = all_lists.keySet().toArray();
+        ArrayList<String> list_array = db.getAllListNames();
 
-        // all_lists.split("");
+        // for (Object list : list_array) {
+        for (String list : list_array) {
+            HBox current_list_box = new HBox();
+            current_list_box.setFillHeight(true);
+            current_list_box.getStyleClass().add("container_sub");
+            current_list_box.setAlignment(Pos.CENTER_LEFT);
+            
+            // Button current_list = new Button(list.toString());
+            Button current_list = new Button(list);
+            current_list.getStyleClass().add("container_sub_child");
+            // current_list.setMinWidth(current_list_box.getWidth());
+            current_list.setOnAction((ActionEvent e) -> {
+                try {
+                    switchToSpecificListView();
+                } catch (IOException e1) {
+            }});
+            current_list_box.getChildren().add(current_list);
+
+            list_container.getChildren().add(list_container.getChildren().size(), current_list_box);
+        }
+
         HBox new_list_trigger_box = new HBox();
         Button new_list_trigger = new Button("+ Create New List");
         new_list_trigger.getStyleClass().add("container_sub_child");
@@ -54,7 +71,7 @@ public class AllListsController implements Initializable{
 
         global_settings.setOnAction((ActionEvent e) -> {
             System.out.println("Global: " + global_settings.getWidth());
-            db.openConnection();
+            db.closeConnection();
         });
         
         new_list_trigger.setOnAction((ActionEvent e) -> {
