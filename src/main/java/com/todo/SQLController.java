@@ -1,10 +1,9 @@
 package com.todo;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.bson.BsonArray;
+import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
@@ -54,23 +53,23 @@ public class SQLController {
     }
 
     /* Get all lists and their items from the database */
-    public Map<String, ArrayList<String>> getAllLists() {
-        /* Key: Title; Value: Items
-         * ex. Christmas: [Buy Gifts, Wrap Gifts, Hide Gifts, Transport Gifts]
-         */
-        Map<String, ArrayList<String>> lists = new HashMap<>();
+    // public Map<String, ArrayList<ListItem>> getAllLists() {
+    //     /* Key: Title; Value: Items
+    //      * ex. Christmas: [Buy Gifts, Wrap Gifts, Hide Gifts, Transport Gifts]
+    //      */
+    //     Map<String, ArrayList<ListItem>> lists = new HashMap<>();
         
-        FindIterable<Document> docs = collection.find();
+    //     FindIterable<Document> docs = collection.find();
 
-        for (Document doc : docs) {
-            String title = doc.get("title").toString();
-            ArrayList<String> items = doc.get("items", new ArrayList<>());
+    //     for (Document doc : docs) {
+    //         String title = doc.get("title").toString();
+    //         ArrayList<ListItem> items = doc.get("items", new ArrayList<>());
 
-            lists.put(title, items);
-        }
+    //         lists.put(title, items);
+    //     }
 
-        return lists;
-    }
+    //     return lists;
+    // }
 
     /* Get all lists (names only) from the database */
     public ArrayList<String> getAllListNames() {
@@ -87,8 +86,8 @@ public class SQLController {
     }
 
     /* Get all items from the list with the provided name from the database*/
-    public ArrayList<String> getList(String list_name) {
-        ArrayList<String> list = new ArrayList<>();
+    public ArrayList<ListItem> getList(String list_name) {
+        ArrayList<ListItem> list = new ArrayList<>();
 
         BsonString str = new BsonString(list_name);
         BsonDocument filter = new BsonDocument("title", str);
@@ -96,7 +95,15 @@ public class SQLController {
         Document doc = collection.find(filter).first();
 
         if(doc != null) {
-            list = doc.get("items", list);
+            ArrayList<Document> temp = new ArrayList<>();
+
+            temp = doc.get("items", temp);
+
+            for(Document item : temp) {
+                String name = item.get("name").toString();
+                boolean checked = (boolean)item.get("checked");
+                list.add(new ListItem(name, checked));
+            }
         }
         else {
             System.err.println("ERROR: List \"" + list_name + "\" does not exist...");
@@ -106,10 +113,20 @@ public class SQLController {
     }
 
     /* Add a new list to the database */
-    public void addList(String list_name, ArrayList<String> list_items) {
+    public void addList(String list_name, ArrayList<ListItem> list_items) {
         Document new_list = new Document();
+        ArrayList<Document> items = new ArrayList<>();
+
+        for(int i = 0; i < list_items.size(); i++) {
+            Document new_item = new Document();
+
+            new_item.append("name", list_items.get(i).getName());
+            new_item.append("checked", list_items.get(i).getStatus());
+            items.add(new_item);
+        }
+
         new_list.append("title", list_name);
-        new_list.append("items", list_items);
+        new_list.append("items", items);
         
         collection.insertOne(new_list);
 
@@ -117,7 +134,7 @@ public class SQLController {
     }
 
     /* Update an existing list in the database */
-    public void updateList(String list_name, String new_name, ArrayList<String> new_list_items) {
+    public void updateList(String list_name, String new_name, ArrayList<ListItem> new_list_items) {
         BsonString current_list_name = new BsonString(list_name);
         BsonDocument filter = new BsonDocument("title", current_list_name);
         BsonDocument updated_list = new BsonDocument();
@@ -131,9 +148,14 @@ public class SQLController {
         if(new_list_items != null) {
             BsonArray updated_list_items = new BsonArray();
 
-            for(String item : new_list_items) {
-                BsonString temp = new BsonString(item);
-                updated_list_items.add(temp);
+            for(ListItem item : new_list_items) {
+                BsonDocument new_item = new BsonDocument();
+                BsonString item_name = new BsonString(item.getName());
+                BsonBoolean item_checked = new BsonBoolean(item.getStatus());
+
+                new_item.put("name", item_name);
+                new_item.put("checked", item_checked);
+                updated_list_items.add(new_item);
             }
             
             BsonDocument inner = new BsonDocument("items", updated_list_items);
@@ -187,14 +209,24 @@ public class SQLController {
     public void RepopulateTestData() {
         String christmas = "Christmas";
         String daily = "Daily";
-        ArrayList<String> christmas_items = new ArrayList<>();
-        ArrayList<String> daily_items = new ArrayList<>();
+        String[] christmas_titles = new String[] {"Buy Gifts", "Wrap Gifts", "Hide Gifts", "Transport Gifts"};
+        String[] daily_titles = new String[] {"Read Book", "Study Japanese", "Play Forager", "Call Mom", "Go Grocery Shopping",
+                                              "Cook Breakfast", "Cook Dinner", "Clean Dishes", "Go to the Gym", "Pay Electric Bill",
+                                              "Work", "Clean the Bathroom", "Order Energy Drinks"};
+        String item_name;
+        boolean item_checked = false;
+        ArrayList<Document> christmas_items = new ArrayList<>();
+        ArrayList<Document> daily_items = new ArrayList<>();
         Document document = new Document();
 
-        christmas_items.add("Buy Gifts");
-        christmas_items.add("Wrap Gifts");
-        christmas_items.add("Hide Gifts");
-        christmas_items.add("Transport Gifts");
+        for(int i = 0; i < 4; i++) {
+            Document item = new Document();
+            item_name = christmas_titles[i];
+
+            item.append("name", item_name);
+            item.append("checked", item_checked);
+            christmas_items.add(item);
+        }
 
         document.append("title", christmas);
         document.append("items", christmas_items);
@@ -205,19 +237,14 @@ public class SQLController {
             System.out.println("Creation of list \"" + christmas + "\" was successful!");
         }
 
-        daily_items.add("Read Book");
-        daily_items.add("Study Japanese");
-        daily_items.add("Play Forager");
-        daily_items.add("Call Mom");
-        daily_items.add("Go Grocery Shopping");
-        daily_items.add("Cook Breakfast");
-        daily_items.add("Cook Dinner");
-        daily_items.add("Clean Dishes");
-        daily_items.add("Go to the Gym");
-        daily_items.add("Pay Electric Bill");
-        daily_items.add("Work");
-        daily_items.add("Clean the Bathroom");
-        daily_items.add("Order Energy Drinks");
+        for(int i = 0; i < 13; i++) {
+            Document item = new Document();
+            item_name = daily_titles[i];
+
+            item.append("name", item_name);
+            item.append("checked", item_checked);
+            daily_items.add(item);
+        }
 
         document.clear();
         document.append("title", daily);
@@ -228,34 +255,5 @@ public class SQLController {
 
             System.out.println("Creation of list \"" + daily + "\" was successful!");
         }
-    }
- 
-    /* TO BE DELETED */
-    public String example(){
-        String result;
-        ArrayList<String> items;
-        Document doc = collection.find().first();
-
-        if (doc != null) {
-            result = "ID: " + doc.get("_id").toString();
-            result += " Title: " + doc.get("title").toString();
-            result += " Items: ";
-            
-            items = doc.get("items", new ArrayList<>());
-
-            for (int i = 0; i < items.size(); i++) {
-                result += items.get(i);
-
-                if(i < items.size()-1) {
-                    result += ", ";
-                }
-            }
-        } else {
-            result = "No matching documents found.";
-        }
-        
-        System.out.println(result);
-        
-        return result;
     }
  }

@@ -24,7 +24,7 @@ public class AllListsController implements Initializable{
     private Boolean editing = false;
     final private int container_cnt = 2;
     private int cntr;
-    private final ArrayList<String> blank_list = new ArrayList<>();
+    private final ArrayList<ListItem> blank_list = new ArrayList<>();
     private final ArrayList<String> old_list_names = new ArrayList<>();
 
     @FXML
@@ -199,7 +199,7 @@ public class AllListsController implements Initializable{
             TextField renamed_list = (TextField)child_list_hbox.getChildren().get(child_list_hbox.getChildren().size()-1);
 
             if(renamed_list.getText().isBlank()) {
-                System.out.println("Invalid List Name- Edit Mode is still on...");
+                System.out.println("Invalid List Name - Edit Mode is still on...");
                 editing = true;
                 return;
             }
@@ -238,6 +238,7 @@ public class AllListsController implements Initializable{
         }
     }
 
+    /* TO BE DELETED */
     public void Repop() {
         db.RepopulateTestData();
     }
