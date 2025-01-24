@@ -15,6 +15,7 @@ public class App extends Application {
 
     private static Scene scene;
     private final static SQLController sqlctrl = new SQLController();
+    private static String specific_list;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -29,6 +30,14 @@ public class App extends Application {
 
     static void setRoot(String fxml) throws IOException {
         scene.setRoot(loadFXML(fxml));
+    }
+
+    static String getSpecificList() {
+        return specific_list;
+    }
+
+    static void setSpecificList(String list_name) {
+        specific_list = list_name;
     }
 
     private static Parent loadFXML(String fxml) throws IOException {

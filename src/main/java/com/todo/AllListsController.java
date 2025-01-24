@@ -24,6 +24,8 @@ public class AllListsController implements Initializable{
     private Boolean editing = false;
     final private int container_cnt = 2;
     private int cntr;
+    private final ArrayList<String> blank_list = new ArrayList<>();
+    private final ArrayList<String> old_list_names = new ArrayList<>();
 
     @FXML
     @Override
@@ -48,7 +50,7 @@ public class AllListsController implements Initializable{
             // current_list.setMinWidth(current_list_box.getWidth());
             current_list.setOnAction((ActionEvent e) -> {
                 try {
-                    switchToSpecificListView();
+                    switchToSpecificListView(current_list.getText());
                 } catch (IOException e1) {
             }});
             current_list_box.getChildren().add(current_list);
@@ -90,21 +92,26 @@ public class AllListsController implements Initializable{
             list_name.setPromptText("Enter new list title here...");
             list_name.getStyleClass().add("container_sub_child_tf");
             list_name.setOnAction((ActionEvent ae) -> {
-                if(!list_name.getText().isBlank()) {
+                String trimmed_name = list_name.getText().trim();
+                if(!trimmed_name.isBlank() && !db.Exists(trimmed_name)) {
                     Button new_list = new Button();
                     new_list.getStyleClass().add("container_sub_child");
                     new_list.setMinWidth(new_list_box.getWidth());
                     new_list.setOnAction((ActionEvent sae) -> {
                         try {
-                            switchToSpecificListView();
+                            switchToSpecificListView(new_list.getText());
                         } catch (IOException e1) {
                     }});
                     all_lists_edit.setDisable(false);
                     new_list_trigger.setDisable(false);
                     new_list.setText(list_name.getText().trim());
                     createNewList(new_list_box, new_list);
+                    db.addList(trimmed_name, blank_list);
                     new_list_box.getChildren().remove(list_name);
                     new_list_box.getChildren().remove(remove_new_list);
+                }
+                else if (db.Exists(trimmed_name)) {
+                    System.err.println("List \"" + trimmed_name + "\" already exists. Use a different name.");
                 }
             });
 
@@ -129,7 +136,8 @@ public class AllListsController implements Initializable{
     
     @FXML
     @SuppressWarnings("unused")
-    private void switchToSpecificListView() throws IOException {
+    private void switchToSpecificListView(String list_to_view) throws IOException {
+        App.setSpecificList(list_to_view);
         App.setRoot("SpecificListView");
     }
 
@@ -161,7 +169,8 @@ public class AllListsController implements Initializable{
         for (cntr = 1; cntr < list_container.getChildren().size()-1; cntr++) {
             HBox child_list_hbox = (HBox)list_container.getChildren().get(cntr);
 
-            String list_name = ((Button)child_list_hbox.getChildren().get(0)).getText();
+            String list_name = ((Button)child_list_hbox.getChildren().get(0)).getText().trim();
+            old_list_names.add(list_name);
             child_list_hbox.getChildren().remove(0);
 
             Button delete_button = new Button();
@@ -169,6 +178,8 @@ public class AllListsController implements Initializable{
             delete_button.getStyleClass().add("delete_button");
             child_list_hbox.getChildren().add(delete_button);
             delete_button.setOnAction((ActionEvent e) -> {
+                old_list_names.remove(list_name);
+                db.deleteList(list_name);
                 list_container.getChildren().remove(child_list_hbox);
                 if(list_container.getChildren().size() <= container_cnt) {
                     editing = !editing;
@@ -176,7 +187,7 @@ public class AllListsController implements Initializable{
                 }
             });
 
-            TextField rename_list = new TextField(list_name.trim());
+            TextField rename_list = new TextField(list_name);
             rename_list.getStyleClass().add("container_sub_child_tf");
             child_list_hbox.getChildren().add(rename_list);
         }
@@ -204,24 +215,31 @@ public class AllListsController implements Initializable{
             Button list_button = (Button)child_list_hbox.getChildren().get(0);
             TextField renamed_list = (TextField)child_list_hbox.getChildren().get(child_list_hbox.getChildren().size()-1);
 
-            list_button.setText(renamed_list.getText());
+            list_button.setText(renamed_list.getText().trim());
             list_button.setMinWidth(child_list_hbox.getWidth());
             list_button.getStyleClass().remove(list_button.getStyleClass().size()-1);
             list_button.getStyleClass().add("container_sub_child");
             list_button.setOnAction((ActionEvent e) -> {
                 try {
-                    switchToSpecificListView();
+                    switchToSpecificListView(list_button.getText());
                 } catch (IOException e1) {
             }});
+
+            db.updateList(old_list_names.get(cntr-1), list_button.getText(), null);
 
             child_list_hbox.getChildren().remove(renamed_list);
         }
 
         list_container.getChildren().get(list_container.getChildren().size()-1).setDisable(false);
+        old_list_names.clear();
 
         if(list_container.getChildren().size() <= container_cnt) {
             all_lists_edit.setDisable(true);
         }
+    }
+
+    public void Repop() {
+        db.RepopulateTestData();
     }
 
 }

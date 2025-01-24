@@ -36,6 +36,7 @@
          </padding>
       </HBox>
       <Button fx:id="global_settings" text="Close DB"/>
+      <Button text="Repop" onAction="#Repop" />
    </children>
    <padding>
       <Insets top="20.0" right="20.0" bottom="0" left="0" />
