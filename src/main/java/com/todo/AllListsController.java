@@ -37,15 +37,19 @@ public class AllListsController implements Initializable{
         // Object[] list_array = all_lists.keySet().toArray();
         ArrayList<String> list_array = db.getAllListNames();
 
+        if(list_array.isEmpty()) {
+            all_lists_edit.setDisable(true);
+        }
+
         // for (Object list : list_array) {
-        for (String list : list_array) {
+        for (int i = 0; i < list_array.size(); i++) {
             HBox current_list_box = new HBox();
             current_list_box.setFillHeight(true);
             current_list_box.getStyleClass().add("container_sub");
             current_list_box.setAlignment(Pos.CENTER_LEFT);
             
             // Button current_list = new Button(list.toString());
-            Button current_list = new Button(list);
+            Button current_list = new Button(list_array.get(i));
             current_list.getStyleClass().add("container_sub_child");
             // current_list.setMinWidth(current_list_box.getWidth());
             current_list.setOnAction((ActionEvent e) -> {
@@ -99,7 +103,13 @@ public class AllListsController implements Initializable{
                     new_list.setMinWidth(new_list_box.getWidth());
                     new_list.setOnAction((ActionEvent sae) -> {
                         try {
-                            switchToSpecificListView(new_list.getText());
+                            if(new_list.getText().equals("Repop")){
+                                db.deleteList(trimmed_name);
+                                Repop();
+                            }
+                            else {
+                                switchToSpecificListView(new_list.getText());
+                            }
                         } catch (IOException e1) {
                     }});
                     all_lists_edit.setDisable(false);

@@ -21,14 +21,14 @@
     background-color: rgba(255, 255, 255, 0.192);
 }
 
-#list_container, ScrollPane, ScrollPane > .scroll-bar, .corner, .track, .increment-button, .decrement-button {
+.list_container, ScrollPane, .scroll-bar, .corner, .track, .increment-button, .decrement-button {
     -fx-background-color: rgb(17, 17, 135);
     background-color: rgb(17, 17, 135);
 }
 
 ScrollPane > .scroll-bar .thumb {
-    -fx-background-color: rgb(78, 2, 78);
-    background-color: rgb(78, 2, 78);
+    -fx-background-color: rgb(13, 13, 93);
+    background-color: rgb(13, 13, 93);
 }
 
 .container_sub {
@@ -91,7 +91,7 @@ ScrollPane > .scroll-bar .thumb {
     border-color: white;
 }
 
-#all_lists_label {
+.header_label {
     -fx-font-size: 2em;
     -fx-text-fill: white;
     font-size: 2em;
@@ -149,4 +149,27 @@ ScrollPane > .scroll-bar .thumb {
     -fx-text-fill: white;
     background-color: rgb(99, 0, 0);
     color: white;
+}
+
+.right_content_button {
+    -fx-background-color: rgb(17, 17, 135);
+    -fx-text-fill: white;
+    -fx-wrap-text: true;
+    -fx-padding: 10px 10px 10px 10px;
+    -fx-alignment: CENTER-LEFT;
+    -fx-border-width: 0px 0px 1px 0px;
+    -fx-border-color: white;
+    background-color: rgb(17, 17, 135);
+    color: white;
+    overflow: visible;
+    text-wrap: wrap;
+    padding: 10px 10px 10px 5px;
+    text-align: left;
+    border-width: 0px 0px 1px 0px;
+    border-color: white;
+}
+
+.right_content_button:hover {
+    -fx-background-color: rgb(13, 13, 93);
+    background-color: rgb(13, 13, 93);
 }
