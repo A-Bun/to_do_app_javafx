@@ -12,11 +12,11 @@
     <children>
         <BorderPane fx:id="border_pane" styleClass="list_container" HBox.hgrow="ALWAYS">
             <top>
-                <HBox fx:id="top_content" alignment="CENTER" spacing="20.0" fillHeight="true" style="-fx-border-width:0px 0px 1px 0px; -fx-border-color:white">
+                <HBox fx:id="top_content" alignment="CENTER_RIGHT" spacing="30.0" fillHeight="true" style="-fx-border-width:0px 0px 1px 0px; -fx-border-color:white">
                     <children>
-                        <Button fx:id="all_lists_button" text="Back" onAction="#switchToAllListsView" />
-                        <Label fx:id="specific_list_label" text="Specific List View" styleClass="header_label" />
-                        <Button fx:id="edit_button" text="Edit" />
+                        <Button fx:id="all_lists_button" text="Go Back" onAction="#switchToAllListsView" styleClass="edit_button" prefHeight="${specific_list_label.height}" minWidth="70" HBox.hgrow="NEVER" />
+                        <Label fx:id="specific_list_label" text="Specific List View" styleClass="header_label" maxWidth="500" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="specific_list_edit" text="Edit" onAction="#handleEditAction" styleClass="edit_button" prefHeight="${specific_list_label.height}" minWidth="${right_content.width}" HBox.hgrow="NEVER" style="-fx-border-width:0px 0px 0px 1px; -fx-border-color:white; -fx-alignment:CENTER-LEFT" />
                     </children>
                 </HBox>
             </top>
@@ -26,14 +26,14 @@
                         <Button fx:id="options_button" text="Options" width="${right_content.width}" styleClass="right_content_button"/>
                         <Button fx:id="undo_button" text="Undo" minWidth="${options_button.width}" styleClass="right_content_button" />
                         <Button fx:id="redo_button" text="Redo" minWidth="${options_button.width}" styleClass="right_content_button" />
-                        <Button fx:id="save_button" text="Save" minWidth="${options_button.width}" styleClass="right_content_button" />
+                        <Button fx:id="save_button" text="Save" minWidth="${options_button.width}" styleClass="right_content_button" onAction="#closeDB" />
                     </children>
                 </VBox>
             </right>
             <center>
                 <ScrollPane fx:id="center_content" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" styleClass="edge-to-edge">
                     <content>
-                       <VBox fx:id="list_container" fillWidth="true" alignment="TOP_LEFT" styleClass="list_container">
+                        <VBox fx:id="list_container" fillWidth="true" alignment="TOP_LEFT" styleClass="list_container">
                             <children>
                             </children>
                             <padding>

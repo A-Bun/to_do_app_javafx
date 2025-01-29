@@ -26,6 +26,15 @@
     background-color: rgb(17, 17, 135);
 }
 
+#scroll_pane, #border_pane {
+    -fx-border-width: 4px;
+    -fx-border-color: white;
+    -fx-border-style: solid line-join round line-cap round;
+    border-width: 4px;
+    border-color: white;
+    border-style: solid line-join round line-cap round;
+}
+
 ScrollPane > .scroll-bar .thumb {
     -fx-background-color: rgb(13, 13, 93);
     background-color: rgb(13, 13, 93);
@@ -53,13 +62,13 @@ ScrollPane > .scroll-bar .thumb {
     -fx-background-color: rgb(17, 17, 135);
     -fx-text-fill: white;
     -fx-wrap-text: true;
-    -fx-padding: 10px 10px 10px 5px;
+    -fx-padding: 10px;
     -fx-alignment: CENTER-LEFT;
     background-color: rgb(17, 17, 135);
     color: white;
     overflow: visible;
     text-wrap: wrap;
-    padding: 10px 10px 10px 5px;
+    padding: 10px;
     text-align: left;
 }
 
@@ -94,8 +103,11 @@ ScrollPane > .scroll-bar .thumb {
 .header_label {
     -fx-font-size: 2em;
     -fx-text-fill: white;
+    -fx-wrap-text: true;
     font-size: 2em;
     color: white;
+    overflow: visible;
+    text-wrap: wrap;
 }
 
 .edit_button {
@@ -172,4 +184,14 @@ ScrollPane > .scroll-bar .thumb {
 .right_content_button:hover {
     -fx-background-color: rgb(13, 13, 93);
     background-color: rgb(13, 13, 93);
+}
+
+.checked_item > .text {
+    -fx-strikethrough: true;
+    text-decoration: line-through;
+}
+
+.checked_item {
+    -fx-text-fill: rgba(255, 255, 255, 0.377);
+    color: rgba(255, 255, 255, 0.377);
 }

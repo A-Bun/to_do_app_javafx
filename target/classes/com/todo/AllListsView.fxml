@@ -13,7 +13,7 @@
    <children>
       <HBox alignment="CENTER" spacing="20.0" fillHeight="true" HBox.hgrow="ALWAYS" styleClass="full_page">
          <children>
-            <ScrollPane fx:id="scrollpane" HBox.hgrow="ALWAYS" minHeight="200" minWidth="200" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" styleClass="edge-to-edge">
+            <ScrollPane fx:id="scroll_pane" HBox.hgrow="ALWAYS" minHeight="200" minWidth="200" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" styleClass="edge-to-edge"> <!-- This style class hides the extra border that scrollpanes gain when in focus -->
                <content>
                   <VBox fillWidth="true" alignment="TOP_LEFT" fx:id="list_container" styleClass="list_container">
                      <children>
