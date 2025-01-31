@@ -12,11 +12,15 @@
     <children>
         <BorderPane fx:id="border_pane" styleClass="list_container" HBox.hgrow="ALWAYS">
             <top>
-                <HBox fx:id="top_content" alignment="CENTER_RIGHT" spacing="30.0" fillHeight="true" style="-fx-border-width:0px 0px 1px 0px; -fx-border-color:white">
+                <HBox fx:id="top_content" alignment="CENTER_RIGHT" fillHeight="true" style="-fx-border-width:0px 0px 1px 0px; -fx-border-color:white">
                     <children>
                         <Button fx:id="all_lists_button" text="Go Back" onAction="#switchToAllListsView" styleClass="edit_button" prefHeight="${specific_list_label.height}" minWidth="70" HBox.hgrow="NEVER" />
-                        <Label fx:id="specific_list_label" text="Specific List View" styleClass="header_label" maxWidth="500" HBox.hgrow="ALWAYS" />
-                        <Button fx:id="specific_list_edit" text="Edit" onAction="#handleEditAction" styleClass="edit_button" prefHeight="${specific_list_label.height}" minWidth="${right_content.width}" HBox.hgrow="NEVER" style="-fx-border-width:0px 0px 0px 1px; -fx-border-color:white; -fx-alignment:CENTER-LEFT" />
+                        <Label fx:id="specific_list_label" text="Specific List View" styleClass="header_label" maxWidth="500" HBox.hgrow="ALWAYS">
+                            <padding>
+                                <Insets top="0" right="10.0" bottom="0" left="10.0" />
+                            </padding>
+                        </Label>
+                        <Button fx:id="specific_list_edit" text="Edit" onAction="#handleEditAction" styleClass="edit_button" prefHeight="${specific_list_label.height}" minWidth="${right_content.width}" HBox.hgrow="NEVER" />
                     </children>
                 </HBox>
             </top>

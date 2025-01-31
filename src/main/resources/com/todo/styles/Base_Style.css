@@ -167,7 +167,7 @@ ScrollPane > .scroll-bar .thumb {
     -fx-background-color: rgb(17, 17, 135);
     -fx-text-fill: white;
     -fx-wrap-text: true;
-    -fx-padding: 10px 10px 10px 10px;
+    -fx-padding: 10px;
     -fx-alignment: CENTER-LEFT;
     -fx-border-width: 0px 0px 1px 0px;
     -fx-border-color: white;
@@ -175,7 +175,7 @@ ScrollPane > .scroll-bar .thumb {
     color: white;
     overflow: visible;
     text-wrap: wrap;
-    padding: 10px 10px 10px 5px;
+    padding: 10px;
     text-align: left;
     border-width: 0px 0px 1px 0px;
     border-color: white;
@@ -194,4 +194,46 @@ ScrollPane > .scroll-bar .thumb {
 .checked_item {
     -fx-text-fill: rgba(255, 255, 255, 0.377);
     color: rgba(255, 255, 255, 0.377);
+}
+
+.all_lists_border {
+    -fx-border-color: white;
+    -fx-border-width:1px 0px 1px 1px;
+    -fx-border-style: solid outside;
+    border-color: white;
+    border-width:1px 0px 1px 1px;
+    border-style: solid outside;
+}
+
+.edit_border {
+    -fx-alignment: CENTER-LEFT;
+    -fx-border-color: white;
+    -fx-border-width:0px 0px 1px 1px;
+    -fx-border-style: solid outside solid inside;
+    text-align: left;
+    border-color: white;
+    border-width:0px 0px 1px 1px;
+    border-style: solid outside solid inside;
+}
+
+.list_header_tf{
+    -fx-background-color: rgb(13, 13, 93);
+    -fx-font-size: 2em;
+    -fx-text-fill: white;
+    -fx-wrap-text: true;
+    -fx-padding: 0px 5px 0px 5px;
+    -fx-alignment: CENTER-LEFT;
+    -fx-border-color: white;
+    -fx-border-width:1px 0px 1px 0px;
+    -fx-border-style: solid outside;
+    background-color: rgb(13, 13, 93);
+    font-size: 2em;
+    color: white;
+    overflow: visible;
+    text-wrap: wrap;
+    padding: 0px 5px 0px 5px;
+    text-align: left;
+    border-color: white;
+    border-width:1px 0px 1px 0px;
+    border-style: solid outside;
 }
