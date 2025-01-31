@@ -173,7 +173,6 @@ public class AllListsController implements Initializable{
         System.out.println("Edit Mode On");
 
         list_container.getChildren().get(list_container.getChildren().size()-1).setDisable(true);
-        all_lists_edit.getStyleClass().remove(all_lists_edit.getStyleClass().size()-1);
         all_lists_edit.getStyleClass().add("edit_button_on");
 
         for (cntr = 1; cntr < list_container.getChildren().size()-1; cntr++) {
@@ -216,8 +215,7 @@ public class AllListsController implements Initializable{
         }
         
         System.out.println("Edit Mode Off");
-        all_lists_edit.getStyleClass().remove(all_lists_edit.getStyleClass().size()-1);
-        all_lists_edit.getStyleClass().add("edit_button");
+        all_lists_edit.getStyleClass().remove("edit_button_on");
 
         for (cntr = 1; cntr < list_container.getChildren().size()-1; cntr++) {
             HBox child_list_hbox = (HBox)list_container.getChildren().get(cntr);
@@ -227,7 +225,7 @@ public class AllListsController implements Initializable{
 
             list_button.setText(renamed_list.getText().trim());
             list_button.setMinWidth(child_list_hbox.getWidth());
-            list_button.getStyleClass().remove(list_button.getStyleClass().size()-1);
+            list_button.getStyleClass().remove("delete_button");
             list_button.getStyleClass().add("container_sub_child");
             list_button.setOnAction((ActionEvent e) -> {
                 try {

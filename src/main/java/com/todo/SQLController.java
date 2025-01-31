@@ -141,8 +141,8 @@ public class SQLController {
         
         if(new_name != null && !new_name.equals(list_name)) {
             BsonString updated_list_name = new BsonString(new_name);
-            BsonDocument inner = new BsonDocument("title", updated_list_name);
-            updated_list.append("$set", inner);
+            BsonDocument inner_title = new BsonDocument("title", updated_list_name);
+            updated_list.append("$set", inner_title);
         }
 
         if(new_list_items != null) {
@@ -158,8 +158,8 @@ public class SQLController {
                 updated_list_items.add(new_item);
             }
             
-            BsonDocument inner = new BsonDocument("items", updated_list_items);
-            updated_list.append("$set", inner);
+            BsonDocument inner_items = new BsonDocument("items", updated_list_items);
+            updated_list.append("$set", inner_items);
         }
 
         if(!updated_list.isEmpty()) {

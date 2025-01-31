@@ -28,6 +28,7 @@ public class SpecificListController implements Initializable {
     @FXML private Label specific_list_label;
     @FXML private Button all_lists_button;
     @FXML private Button specific_list_edit;
+    @FXML private Button save_button;
     @FXML private HBox top_content;
     @FXML private VBox list_container;
     private ArrayList<ListItem> list_items;
@@ -65,12 +66,7 @@ public class SpecificListController implements Initializable {
             current_item.getStyleClass().add("container_sub_child");
             // current_item.setMinWidth(current_item_box.getWidth());
             current_item.setOnAction((ActionEvent e) -> {
-                if(current_item.getStyleClass().contains("checked_item")) {
-                    current_item.getStyleClass().remove(current_item.getStyleClass().size()-1);
-                }
-                else {
-                    current_item.getStyleClass().add("checked_item");
-                }
+                toggleItemStatus(current_item);
             });
 
             createContainerChild(current_item, 0);
@@ -110,6 +106,8 @@ public class SpecificListController implements Initializable {
     private void initiateEditMode() {
         System.out.println("Edit Mode On");
 
+        save_button.setDisable(true);
+
         /* Add an "Add Item" button to the end of the list_container (similar to the Create New List button) */
         Button add_item_button = new Button("Add New Item to List");
         add_item_button.getStyleClass().add("container_sub_child");
@@ -117,6 +115,25 @@ public class SpecificListController implements Initializable {
             // create textfield
             // create container child using textfield placement 1
             System.out.println("adding new item...");
+            
+            Button new_item_button = new Button();
+            new_item_button.getStyleClass().add("container_sub_child");
+            new_item_button.setOnAction((ActionEvent ae) -> {
+                toggleItemStatus(new_item_button);
+            });
+            
+            TextField new_item = new TextField();
+            new_item.getStyleClass().add("container_sub_child_tf");
+            new_item.setOnAction((ActionEvent ae) -> {
+                String trimmed_name = new_item.getText().trim();
+                if(!trimmed_name.isBlank()) {
+                    new_item_button.setText(trimmed_name);
+                    HBox new_hbox = (HBox)new_item.getParent();
+                    new_hbox.getChildren().remove(new_item);
+                    new_hbox.getChildren().add(new_item_button);
+                    toggleListStatus();
+                }});
+            createContainerChild(new_item, 1);
         });
         list_container.getChildren().add(add_item_button);
 
@@ -166,11 +183,50 @@ public class SpecificListController implements Initializable {
     private void concludeEditMode() {
         System.out.println("Edit Mode Off");
 
+        save_button.setDisable(false);
+
         /* Remove "Add Item" button from the list_container */
-        specific_list_edit.getStyleClass().remove(specific_list_edit.getStyleClass().size()-1);
+        specific_list_edit.getStyleClass().remove("edit_button_on");
         list_container.getChildren().remove(list_container.getChildren().size()-1);
 
         /* loop over current list items, change them back to buttons */
+    }
+
+    private void toggleItemStatus(Button item_button) {
+        if(item_button.getStyleClass().contains("checked_item")) {
+            item_button.getStyleClass().remove("checked_item");
+        }
+        else {
+            item_button.getStyleClass().add("checked_item");
+        }
+
+        toggleListStatus();
+    }
+
+    private void toggleListStatus() {
+        int child_count = list_container.getChildren().size();
+        int child_id = 0;
+        boolean all_checked = true;
+
+        if(editing) {
+            child_count--;
+            // child_id++; // add back with delete button in edit mode
+        }
+
+        for(int i = 0; i < child_count; i++) {
+            HBox child_hbox = (HBox)list_container.getChildren().get(i);
+
+            if(!child_hbox.getChildren().get(child_id).getStyleClass().contains("checked_item")) {
+                all_checked = false;
+            }
+        }
+
+        if(all_checked) {
+            specific_list_label.getStyleClass().add("checked_item");
+        }
+        else {
+            specific_list_label.getStyleClass().remove("checked_item");
+        }
     }
 
     private ContextMenu addNewMenuItem(ContextMenu menu, String menu_item_name, EventHandler<ActionEvent> menu_item_event) {
@@ -178,6 +234,38 @@ public class SpecificListController implements Initializable {
         menu_item.setOnAction(menu_item_event);
         menu.getItems().add(menu_item);
         return menu;
+    }
+
+    @FXML
+    @SuppressWarnings("unused")
+    private void saveList() {
+        // clear the existing ArrayList of ListItems
+        list_items.clear();
+
+        // loop over list_container's children
+        for (int i = 0; i < list_container.getChildren().size(); i++) {
+            HBox child_hbox = (HBox)list_container.getChildren().get(i);
+            Button item = (Button)child_hbox.getChildren().get(0);
+            boolean is_checked = false;
+
+            if(item.getStyleClass().contains("checked_item")) {
+                is_checked = true;
+            }
+            
+            // for the current button, create a new ListItem that uses the button's text as the name and the button's checked_item style as the status
+            ListItem list_item = new ListItem(item.getText(), is_checked);
+
+            // store that new ListItem in the ArrayList
+            list_items.add(list_item);
+        }
+
+        System.out.println("app list: " + App.getSpecificList() + "; new list: " + specific_list_label.getText());
+
+        // call the SQLController's updateList() function with App.getSpecificList(), specific_list_label.getText(), and the ArrayList
+        db.updateList(App.getSpecificList(), specific_list_label.getText(), list_items);
+
+        // output save message to console
+        System.out.println("List Successfully Saved!");
     }
 
     @FXML
