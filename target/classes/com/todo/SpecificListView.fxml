@@ -8,8 +8,9 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.geometry.Insets?>
 
-<HBox xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.todo.SpecificListController" alignment="CENTER" spacing="20.0" fillHeight="true" styleClass="full_page">
+<HBox xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.todo.SpecificListController" alignment="CENTER" spacing="20.0" fillHeight="true" styleClass="full_page" fx:id="highest">
     <children>
+        <!-- <fx:include source="secondary.fxml" /> -->
         <BorderPane fx:id="border_pane" styleClass="list_container" HBox.hgrow="ALWAYS">
             <top>
                 <HBox fx:id="top_content" alignment="CENTER_RIGHT" fillHeight="true" style="-fx-border-width:0px 0px 1px 0px; -fx-border-color:white">
@@ -37,7 +38,7 @@
             <center>
                 <ScrollPane fx:id="center_content" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" styleClass="edge-to-edge">
                     <content>
-                        <VBox fx:id="list_container" fillWidth="true" alignment="TOP_LEFT" styleClass="list_container">
+                        <VBox fx:id="list_container" spacing="1.0" fillWidth="true" alignment="TOP_LEFT" styleClass="list_container">
                             <children>
                             </children>
                             <padding>

@@ -137,12 +137,12 @@ public class SQLController {
     public void updateList(String list_name, String new_name, ArrayList<ListItem> new_list_items) {
         BsonString current_list_name = new BsonString(list_name);
         BsonDocument filter = new BsonDocument("title", current_list_name);
+        BsonDocument updated_data = new BsonDocument();
         BsonDocument updated_list = new BsonDocument();
         
-        if(new_name != null && !new_name.equals(list_name)) {
+        if(!new_name.isBlank() && !new_name.equals(list_name)) {
             BsonString updated_list_name = new BsonString(new_name);
-            BsonDocument inner_title = new BsonDocument("title", updated_list_name);
-            updated_list.append("$set", inner_title);
+            updated_data.append("title", updated_list_name);
         }
 
         if(new_list_items != null) {
@@ -158,9 +158,10 @@ public class SQLController {
                 updated_list_items.add(new_item);
             }
             
-            BsonDocument inner_items = new BsonDocument("items", updated_list_items);
-            updated_list.append("$set", inner_items);
+            updated_data.append("items", updated_list_items);
         }
+
+        updated_list.append("$set", updated_data);
 
         if(!updated_list.isEmpty()) {
             collection.updateOne(filter, updated_list);
