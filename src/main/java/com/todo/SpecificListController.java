@@ -70,8 +70,14 @@ public class SpecificListController implements Initializable {
                 toggleItemStatus(current_item);
             });
 
+            if(item.getStatus()) {
+                current_item.getStyleClass().add("checked_item");
+            }
+
             createContainerChild(current_item, 0);
         }
+        
+        toggleListStatus();
     }
 
     @FXML
