@@ -33,7 +33,8 @@ public class AllListsController implements Initializable{
     public void initialize(URL location, ResourceBundle resources) {
         db = App.getSQLController();
 
-        // Map<String, ArrayList<ListItem>> all_lists = db.getAllLists();      
+        // Map<String, ArrayList<ListItem>> all_lists = db.getAllLists();
+        db.getAllLists();      
 
         // Object[] list_array = all_lists.keySet().toArray();
         ArrayList<String> list_array = db.getAllListNames();

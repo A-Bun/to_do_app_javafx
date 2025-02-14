@@ -1,6 +1,8 @@
 package com.todo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
@@ -55,34 +57,36 @@ public class SQLController {
     }
 
     /* Get all lists and their items from the database */
-    // public Map<String, ArrayList<ListItem>> getAllLists() {
-    //     /* Key: Title; Value: Items
-    //      * ex. Christmas: [Buy Gifts, Wrap Gifts, Hide Gifts, Transport Gifts]
-    //      */
-    //     Map<String, ArrayList<ListItem>> lists = new HashMap<>();
+    public Map<String, ArrayList<ListItem>> getAllLists() {
+        /* Key: Title; Value: Items
+         * ex. Christmas: [Buy Gifts, Wrap Gifts, Hide Gifts, Transport Gifts]
+         */
+        Map<String, ArrayList<ListItem>> lists = new HashMap<>();
         
-    //     FindIterable<Document> docs = collection.find();
+        FindIterable<Document> docs = collection.find();
 
-    //     for (Document doc : docs) {
-    //         ArrayList<ListItem> items = new ArrayList<>();
-    //         String title = doc.get("title").toString();
-    //         ArrayList<Document> items_array = doc.get("items", new ArrayList<>());
+        for (Document doc : docs) {
+            ArrayList<ListItem> items = new ArrayList<>();
+            String title = doc.get("title").toString();
+            ArrayList<Document> items_array = doc.get("items", new ArrayList<>());
 
-    //         for (int i = 0; i < items_array.size(); i++) {
-    //             BsonDocument item_doc = items_array.get(i).toBsonDocument();
-    //             BsonString item_name = item_doc.get("name").asString();
-    //             BsonBoolean item_checked = item_doc.get("checked").asBoolean();
+            for (int i = 0; i < items_array.size(); i++) {
+                BsonDocument item_doc = items_array.get(i).toBsonDocument();
+                BsonObjectId item_obj_id = item_doc.get("id").asObjectId();
+                String item_id = item_obj_id.toString();
+                BsonString item_name = item_doc.get("name").asString();
+                BsonBoolean item_checked = item_doc.get("checked").asBoolean();
 
-    //             ListItem list_item = new ListItem(item_name.getValue(), item_checked.getValue());
-    //             // System.out.println("List Name: " + title + "; Item Name: " +  list_item.getName() + "; Checked?: " + list_item.getStatus());
-    //             items.add(list_item);
-    //         }
+                ListItem list_item = new ListItem(item_id, item_name.getValue(), item_checked.getValue());
+                System.out.println("List Name: " + title + "; List ID: " + item_id + "; Item Name: " +  list_item.getName() + "; Checked?: " + list_item.getStatus());
+                items.add(list_item);
+            }
 
-    //         lists.put(title, items);
-    //     }
+            lists.put(title, items);
+        }
 
-    //     return lists;
-    // }
+        return lists;
+    }
 
     /* Get all lists (names only) from the database */
     public ArrayList<String> getAllListNames() {
