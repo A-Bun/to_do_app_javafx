@@ -1,14 +1,14 @@
 package com.todo;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
+import org.bson.BsonObjectId;
 import org.bson.BsonString;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
@@ -55,34 +55,34 @@ public class SQLController {
     }
 
     /* Get all lists and their items from the database */
-    public Map<String, ArrayList<ListItem>> getAllLists() {
-        /* Key: Title; Value: Items
-         * ex. Christmas: [Buy Gifts, Wrap Gifts, Hide Gifts, Transport Gifts]
-         */
-        Map<String, ArrayList<ListItem>> lists = new HashMap<>();
+    // public Map<String, ArrayList<ListItem>> getAllLists() {
+    //     /* Key: Title; Value: Items
+    //      * ex. Christmas: [Buy Gifts, Wrap Gifts, Hide Gifts, Transport Gifts]
+    //      */
+    //     Map<String, ArrayList<ListItem>> lists = new HashMap<>();
         
-        FindIterable<Document> docs = collection.find();
+    //     FindIterable<Document> docs = collection.find();
 
-        for (Document doc : docs) {
-            ArrayList<ListItem> items = new ArrayList<>();
-            String title = doc.get("title").toString();
-            ArrayList<Document> items_array = doc.get("items", new ArrayList<>());
+    //     for (Document doc : docs) {
+    //         ArrayList<ListItem> items = new ArrayList<>();
+    //         String title = doc.get("title").toString();
+    //         ArrayList<Document> items_array = doc.get("items", new ArrayList<>());
 
-            for (int i = 0; i < items_array.size(); i++) {
-                BsonDocument item_doc = items_array.get(i).toBsonDocument();
-                BsonString item_name = item_doc.get("name").asString();
-                BsonBoolean item_checked = item_doc.get("checked").asBoolean();
+    //         for (int i = 0; i < items_array.size(); i++) {
+    //             BsonDocument item_doc = items_array.get(i).toBsonDocument();
+    //             BsonString item_name = item_doc.get("name").asString();
+    //             BsonBoolean item_checked = item_doc.get("checked").asBoolean();
 
-                ListItem list_item = new ListItem(item_name.getValue(), item_checked.getValue());
-                // System.out.println("List Name: " + title + "; Item Name: " +  list_item.getName() + "; Checked?: " + list_item.getStatus());
-                items.add(list_item);
-            }
+    //             ListItem list_item = new ListItem(item_name.getValue(), item_checked.getValue());
+    //             // System.out.println("List Name: " + title + "; Item Name: " +  list_item.getName() + "; Checked?: " + list_item.getStatus());
+    //             items.add(list_item);
+    //         }
 
-            lists.put(title, items);
-        }
+    //         lists.put(title, items);
+    //     }
 
-        return lists;
-    }
+    //     return lists;
+    // }
 
     /* Get all lists (names only) from the database */
     public ArrayList<String> getAllListNames() {
@@ -113,9 +113,10 @@ public class SQLController {
             temp = doc.get("items", temp);
 
             for(Document item : temp) {
+                String id = item.get("id", new ObjectId()).toString();
                 String name = item.get("name").toString();
                 boolean checked = (boolean)item.get("checked");
-                list.add(new ListItem(name, checked));
+                list.add(new ListItem(id, name, checked));
             }
         }
         else {
@@ -133,6 +134,7 @@ public class SQLController {
         for(int i = 0; i < list_items.size(); i++) {
             Document new_item = new Document();
 
+            new_item.append("id", list_items.get(i).getId());
             new_item.append("name", list_items.get(i).getName());
             new_item.append("checked", list_items.get(i).getStatus());
             items.add(new_item);
@@ -163,9 +165,12 @@ public class SQLController {
 
             for(ListItem item : new_list_items) {
                 BsonDocument new_item = new BsonDocument();
+                ObjectId obj_id = new ObjectId(item.getId());
+                BsonObjectId item_id = new BsonObjectId(obj_id);
                 BsonString item_name = new BsonString(item.getName());
                 BsonBoolean item_checked = new BsonBoolean(item.getStatus());
 
+                new_item.put("id", item_id);
                 new_item.put("name", item_name);
                 new_item.put("checked", item_checked);
                 updated_list_items.add(new_item);
@@ -237,6 +242,7 @@ public class SQLController {
             Document item = new Document();
             item_name = christmas_titles[i];
 
+            item.append("id", new ObjectId());
             item.append("name", item_name);
             item.append("checked", item_checked);
             christmas_items.add(item);
@@ -255,6 +261,7 @@ public class SQLController {
             Document item = new Document();
             item_name = daily_titles[i];
 
+            item.append("id", new ObjectId());
             item.append("name", item_name);
             item.append("checked", item_checked);
             daily_items.add(item);

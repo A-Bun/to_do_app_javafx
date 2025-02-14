@@ -5,6 +5,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
+import org.bson.types.ObjectId;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -56,28 +58,30 @@ public class SpecificListController implements Initializable {
         if(list_items.isEmpty()) {
             /* Start the page in Edit mode to see the Add Item button */
 
+            editing = true;
             initiateEditMode();
             specific_list_edit.setDisable(true);
         }
+        else {
+            for (int i = 0; i < list_items.size(); i++) {
+                ListItem item = list_items.get(i);
 
-        for (int i = 0; i < list_items.size(); i++) {
-            ListItem item = list_items.get(i);
+                Button current_item = new Button(item.getName());
+                current_item.getStyleClass().add("container_sub_child");
+                // current_item.setMinWidth(current_item_box.getWidth());
+                current_item.setOnAction((ActionEvent e) -> {
+                    toggleItemStatus(current_item);
+                });
 
-            Button current_item = new Button(item.getName());
-            current_item.getStyleClass().add("container_sub_child");
-            // current_item.setMinWidth(current_item_box.getWidth());
-            current_item.setOnAction((ActionEvent e) -> {
-                toggleItemStatus(current_item);
-            });
+                if(item.getStatus()) {
+                    current_item.getStyleClass().add("checked_item");
+                }
 
-            if(item.getStatus()) {
-                current_item.getStyleClass().add("checked_item");
+                createContainerChild(current_item, 0);
             }
-
-            createContainerChild(current_item, 0);
+            
+            toggleListStatus();
         }
-        
-        toggleListStatus();
     }
 
     @FXML
@@ -137,9 +141,11 @@ public class SpecificListController implements Initializable {
                 rename_item.setOnAction((ActionEvent sae) -> {
                     String trimmed_name = rename_item.getText().trim();
                     if(!trimmed_name.isBlank()) {
-                        updateListItem(new_item_button.getText(), trimmed_name);
                         new_item_button.setText(trimmed_name);
                         HBox child_hbox = (HBox)rename_item.getParent();
+                        String item_id = list_items.get(list_container.getChildren().indexOf(child_hbox)).getId();
+                        updateListItem(item_id, new_item_button.getText(), trimmed_name);
+                        child_hbox.getChildren().indexOf(rename_item);
                         child_hbox.getChildren().remove(rename_item);
                         child_hbox.getChildren().add(new_item_button);
                         if(!stillRenaming()) {
@@ -150,30 +156,15 @@ public class SpecificListController implements Initializable {
                 child_hbox.getChildren().remove(new_item_button);
                 child_hbox.getChildren().add(rename_item);
             }));
-            
-            TextField new_item = new TextField();
-            new_item.getStyleClass().add("container_sub_child_tf");
-            new_item.setOnAction((ActionEvent ae) -> {
-                String trimmed_name = new_item.getText().trim();
-                if(!trimmed_name.isBlank()) {
-                    new_item_button.setText(trimmed_name);
-                    HBox new_hbox = (HBox)new_item.getParent();
-                    new_hbox.getChildren().remove(new_item);
-                    new_hbox.getChildren().add(new_item_button);
-                    if(!stillRenaming()) {
-                        specific_list_edit.setDisable(false);
-                    }
-                    addListItem(trimmed_name, false);
-                    toggleListStatus();
-                }});
-            HBox new_hbox = createContainerChild(new_item, 1);
 
             Button delete_button = new Button();
             delete_button.setText("X");
             delete_button.getStyleClass().add("delete_button");
             delete_button.setOnAction((ActionEvent ae) -> {
-                deleteListItem(new_item_button.getText());
-                list_container.getChildren().remove(new_hbox);
+                Node parent = delete_button.getParent();
+                String item_id = list_items.get(list_container.getChildren().indexOf(parent)).getId();
+                deleteListItem(item_id, new_item_button.getText());
+                list_container.getChildren().remove(parent);
                 if(!stillRenaming()) {
                     specific_list_edit.setDisable(false);
                 }
@@ -181,8 +172,26 @@ public class SpecificListController implements Initializable {
                 if(list_container.getChildren().size() <= 1) {
                     specific_list_edit.setDisable(true);
                 }
+                toggleListStatus();
             });
-            new_hbox.getChildren().add(0, delete_button);
+            HBox new_hbox = createContainerChild(delete_button, 1);
+            
+            TextField new_item = new TextField();
+            new_item.getStyleClass().add("container_sub_child_tf");
+            new_item.setOnAction((ActionEvent ae) -> {
+                String trimmed_name = new_item.getText().trim();
+                if(!trimmed_name.isBlank()) {
+                    new_item_button.setText(trimmed_name);
+                    HBox parent_hbox = (HBox)new_item.getParent();
+                    parent_hbox.getChildren().remove(new_item);
+                    parent_hbox.getChildren().add(new_item_button);
+                    if(!stillRenaming()) {
+                        specific_list_edit.setDisable(false);
+                    }
+                    addListItem(trimmed_name, false);
+                    toggleListStatus();
+                }});
+            new_hbox.getChildren().add(new_item);
         });
         list_container.getChildren().add(add_item_button);
 
@@ -220,7 +229,8 @@ public class SpecificListController implements Initializable {
             delete_button.setText("X");
             delete_button.getStyleClass().add("delete_button");
             delete_button.setOnAction((ActionEvent e) -> {
-                deleteListItem(item.getText());
+                String item_id = list_items.get(list_container.getChildren().indexOf(child_list_hbox)).getId();
+                deleteListItem(item_id, item.getText());
                 list_container.getChildren().remove(child_list_hbox);
                 if(!stillRenaming()) {
                     specific_list_edit.setDisable(false);
@@ -229,6 +239,7 @@ public class SpecificListController implements Initializable {
                 if(list_container.getChildren().size() <= 1) {
                     specific_list_edit.setDisable(true);
                 }
+                toggleListStatus();
             });
             child_list_hbox.getChildren().add(0, delete_button);
 
@@ -239,7 +250,8 @@ public class SpecificListController implements Initializable {
                     rename_item.setOnAction((ActionEvent ae) -> {
                         String trimmed_name = rename_item.getText().trim();
                         if(!trimmed_name.isBlank()) {
-                            updateListItem(item.getText(), trimmed_name);
+                            String item_id = list_items.get(list_container.getChildren().indexOf(child_list_hbox)).getId();
+                            updateListItem(item_id, item.getText(), trimmed_name);
                             item.setText(trimmed_name);
                             child_list_hbox.getChildren().remove(rename_item);
                             child_list_hbox.getChildren().add(item);
@@ -309,7 +321,9 @@ public class SpecificListController implements Initializable {
             check = true;
         }
 
-        updateListItem(item_button.getText(), check);
+        Node parent = item_button.getParent();
+        String item_id = list_items.get(list_container.getChildren().indexOf(parent)).getId();
+        updateListItem(item_id, item_button.getText(), check);
 
         toggleListStatus();
     }
@@ -321,6 +335,7 @@ public class SpecificListController implements Initializable {
 
         if(editing) {
             child_count--;
+            child_id = 1;
             // child_id++; // add back with delete button in edit mode
         }
 
@@ -332,10 +347,10 @@ public class SpecificListController implements Initializable {
             }
         }
 
-        if(all_checked) {
+        if(all_checked && !specific_list_label.getStyleClass().contains("checked_item")) {
             specific_list_label.getStyleClass().add("checked_item");
         }
-        else {
+        else if (!all_checked) {
             specific_list_label.getStyleClass().remove("checked_item");
         }
     }
@@ -347,11 +362,11 @@ public class SpecificListController implements Initializable {
         return menu;
     }
 
-    private ListItem getListItem(String item_name) {
+    private ListItem getListItem(String item_id, String item_name) {
         ListItem list_item = null;
         
         for(int i = 0; i < list_items.size(); i++) {
-            if(list_items.get(i).getName().equals(item_name)) {
+            if(list_items.get(i).getName().equals(item_name) && list_items.get(i).getId().equals(item_id)) {
                 list_item = list_items.get(i);
             }
         }
@@ -360,21 +375,22 @@ public class SpecificListController implements Initializable {
     }
 
     private void addListItem(String item_name, boolean item_status) {
-        ListItem new_list_item = new ListItem(item_name, item_status);
+        ObjectId item_id = new ObjectId();
+        ListItem new_list_item = new ListItem(item_id.toString(), item_name, item_status);
         list_items.add(new_list_item);
 
         System.out.println("Added new list item \"" + item_name + "\"");
     }
 
-    private void deleteListItem(String item_name) {
-        ListItem item_to_delete = getListItem(item_name);
+    private void deleteListItem(String item_id, String item_name) {
+        ListItem item_to_delete = getListItem(item_id, item_name);
         list_items.remove(item_to_delete);
 
         System.out.println("Deleted list item \"" + item_name + "\"");
     }
 
-    private void updateListItem(String item_name, String new_item_name) {
-        ListItem item_to_update = getListItem(item_name);
+    private void updateListItem(String item_id, String item_name, String new_item_name) {
+        ListItem item_to_update = getListItem(item_id, item_name);
         if(new_item_name != null && !new_item_name.equals(item_name))
         {
             item_to_update.setName(new_item_name);
@@ -383,8 +399,8 @@ public class SpecificListController implements Initializable {
         }
     }
 
-    private void updateListItem(String item_name, boolean item_status) {
-        ListItem item_to_update = getListItem(item_name);
+    private void updateListItem(String item_id, String item_name, boolean item_status) {
+        ListItem item_to_update = getListItem(item_id, item_name);
 
         if(item_status != item_to_update.getStatus()) {
             item_to_update.setStatus(item_status);

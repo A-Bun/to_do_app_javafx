@@ -2,12 +2,18 @@ package com.todo;
 
 public class ListItem {
 
+    private String id;
     private String name;
     private boolean checked;
 
-    public ListItem(String i_name, boolean i_checked) {
+    public ListItem(String i_id, String i_name, boolean i_checked) {
+        this.id = i_id;
         this.name = i_name;
         this.checked = i_checked;
+    }
+
+    public String getId() {
+        return id;
     }
     
     public String getName() {
@@ -16,6 +22,10 @@ public class ListItem {
 
     public boolean getStatus() {
         return checked;
+    }
+
+    public void setId(String new_id) {
+        id = new_id;
     }
 
     public void setName(String new_name) {
