@@ -3,6 +3,8 @@ package com.todo;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
@@ -26,6 +28,7 @@ public class AllListsController implements Initializable{
     private int cntr;
     private final ArrayList<ListItem> blank_list = new ArrayList<>();
     private final ArrayList<String> old_list_names = new ArrayList<>();
+    private final Map<String, Boolean> list_statuses = new HashMap<>();
 
     @FXML
     @Override
@@ -34,7 +37,6 @@ public class AllListsController implements Initializable{
         db = App.getSQLController();
 
         // Map<String, ArrayList<ListItem>> all_lists = db.getAllLists();
-        db.getAllLists();      
 
         // Object[] list_array = all_lists.keySet().toArray();
         ArrayList<String> list_array = db.getAllListNames();
@@ -45,14 +47,35 @@ public class AllListsController implements Initializable{
 
         // for (Object list : list_array) {
         for (int i = 0; i < list_array.size(); i++) {
+            String list_name = list_array.get(i);
             HBox current_list_box = new HBox();
             current_list_box.setFillHeight(true);
             current_list_box.getStyleClass().add("container_sub");
             current_list_box.setAlignment(Pos.CENTER_LEFT);
             
-            // Button current_list = new Button(list.toString());
-            Button current_list = new Button(list_array.get(i));
+            Button current_list = new Button(list_name);
+            // Button current_list = new Button(list_array.get(i));
             current_list.getStyleClass().add("container_sub_child");
+
+            ArrayList<ListItem> full_list = db.getList(list_name);
+
+            if(!full_list.isEmpty()) {
+                current_list.getStyleClass().add("checked_item");
+
+                for(ListItem item : full_list) {
+                    list_statuses.put(list_name, true);
+
+                    if(!item.getStatus()) {
+                        current_list.getStyleClass().remove("checked_item");
+                        list_statuses.put(list_name, false);
+                        break;
+                    }
+                }
+            }
+            else {
+                list_statuses.put(list_name, false);
+            }
+
             // current_list.setMinWidth(current_list_box.getWidth());
             current_list.setOnAction((ActionEvent e) -> {
                 try {
@@ -99,28 +122,20 @@ public class AllListsController implements Initializable{
             list_name.getStyleClass().add("container_sub_child_tf");
             list_name.setOnAction((ActionEvent ae) -> {
                 String trimmed_name = list_name.getText().trim();
-                if(!trimmed_name.isBlank() && !db.Exists(trimmed_name)) {
-                    Button new_list = new Button();
-                    new_list.getStyleClass().add("container_sub_child");
-                    new_list.setMinWidth(new_list_box.getWidth());
-                    new_list.setOnAction((ActionEvent sae) -> {
-                        try {
-                            if(new_list.getText().equals("Repop")){
-                                db.deleteList(trimmed_name);
-                                Repop();
-                            }
-                            else {
-                                switchToSpecificListView(new_list.getText());
-                            }
-                        } catch (IOException e1) {
-                    }});
+
+                if(trimmed_name.equals("Repop")){
                     all_lists_edit.setDisable(false);
                     new_list_trigger.setDisable(false);
-                    new_list.setText(list_name.getText().trim());
-                    createNewList(new_list_box, new_list);
+                    list_container.getChildren().remove(new_list_box);
+                    Repop();
+                }
+                else if(!trimmed_name.isBlank() && !db.Exists(trimmed_name)) {
                     db.addList(trimmed_name, blank_list);
-                    new_list_box.getChildren().remove(list_name);
-                    new_list_box.getChildren().remove(remove_new_list);
+                    list_statuses.put(trimmed_name, false);
+                    try {
+                        switchToSpecificListView(trimmed_name);
+                    } 
+                    catch (IOException e1) { }
                 }
                 else if (db.Exists(trimmed_name)) {
                     System.err.println("List \"" + trimmed_name + "\" already exists. Use a different name.");
@@ -153,10 +168,10 @@ public class AllListsController implements Initializable{
         App.setRoot("SpecificListView");
     }
 
-    @FXML
-    private void createNewList(HBox list_box, Button list_button) {
-        list_box.getChildren().add(list_button);
-    }
+    // @FXML
+    // private void createNewList(HBox list_box, Button list_button) {
+    //     list_box.getChildren().add(list_button);
+    // }
 
     @FXML
     @SuppressWarnings("unused")
@@ -190,6 +205,7 @@ public class AllListsController implements Initializable{
             child_list_hbox.getChildren().add(delete_button);
             delete_button.setOnAction((ActionEvent e) -> {
                 old_list_names.remove(list_name);
+                list_statuses.remove(list_name);
                 db.deleteList(list_name);
                 list_container.getChildren().remove(child_list_hbox);
                 if(list_container.getChildren().size() <= container_cnt) {
@@ -229,6 +245,7 @@ public class AllListsController implements Initializable{
             list_button.setMinWidth(child_list_hbox.getWidth());
             list_button.getStyleClass().remove("delete_button");
             list_button.getStyleClass().add("container_sub_child");
+
             list_button.setOnAction((ActionEvent e) -> {
                 try {
                     switchToSpecificListView(list_button.getText());
@@ -236,6 +253,16 @@ public class AllListsController implements Initializable{
             }});
 
             db.updateList(old_list_names.get(cntr-1), list_button.getText(), null);
+
+            if(list_statuses.get(old_list_names.get(cntr-1)) == true ) {
+                list_statuses.remove(old_list_names.get(cntr-1));
+                list_statuses.put(list_button.getText(), true);
+                list_button.getStyleClass().add("checked_item");
+            }
+            else if(list_statuses.get(old_list_names.get(cntr-1)) == false ) {
+                list_statuses.remove(old_list_names.get(cntr-1));
+                list_statuses.put(list_button.getText(), false);
+            }
 
             child_list_hbox.getChildren().remove(renamed_list);
         }
