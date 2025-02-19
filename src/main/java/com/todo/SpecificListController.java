@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -23,6 +24,9 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 public class SpecificListController implements Initializable {
     @FXML private BorderPane border_pane;
@@ -411,14 +415,24 @@ public class SpecificListController implements Initializable {
 
     @FXML
     @SuppressWarnings("unused")
-    private void saveList() {
-        System.out.println("app list: " + App.getSpecificList() + "; new list: " + specific_list_label.getText());
+    private void saveList() { 
+        // TO DO: The code below creates a dialog window! Review it to understand, then edit it for "Are you sure you want to save?"
+        final Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        // dialog.initOwner(App.getRoot()); -- might not need this (custom funtion that returns stage from App)
+        VBox dialogVbox = new VBox(20);
+        dialogVbox.getChildren().add(new Text("This is a Dialog"));
+        Scene dialogScene = new Scene(dialogVbox, 300, 200);
+        dialog.setScene(dialogScene);
+        dialog.show();
+    
+        // System.out.println("app list: " + App.getSpecificList() + "; new list: " + specific_list_label.getText());
 
         // call the SQLController's updateList() function with App.getSpecificList(), specific_list_label.getText(), and the ArrayList
-        db.updateList(App.getSpecificList(), specific_list_label.getText(), list_items);
+        // db.updateList(App.getSpecificList(), specific_list_label.getText(), list_items);
 
         // output save message to console
-        System.out.println("List Successfully Saved!");
+        // System.out.println("List Successfully Saved!");
     }
 
     @FXML
