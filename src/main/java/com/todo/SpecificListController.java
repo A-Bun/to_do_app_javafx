@@ -11,6 +11,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -24,7 +25,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -415,24 +416,72 @@ public class SpecificListController implements Initializable {
 
     @FXML
     @SuppressWarnings("unused")
-    private void saveList() { 
+    private void saveDialog() { 
         // TO DO: The code below creates a dialog window! Review it to understand, then edit it for "Are you sure you want to save?"
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         // dialog.initOwner(App.getRoot()); -- might not need this (custom funtion that returns stage from App)
+        dialog.setResizable(false);
+        dialog.setTitle("Save Changes?");
+        
+        // create outer dialog box
         VBox dialogVbox = new VBox(20);
-        dialogVbox.getChildren().add(new Text("This is a Dialog"));
+        dialogVbox.setAlignment(Pos.CENTER);
+        dialogVbox.getStyleClass().add("full_page");
+        dialogVbox.setPadding(new Insets(20));
+
+        // create details of dialog box
+        Label dialogLabel = new Label("Are you sure you want to save your changes?");
+        dialogLabel.setTextAlignment(TextAlignment.CENTER);
+        dialogLabel.getStyleClass().add("header_label");
+
+        HBox dialogHbox = new HBox(20);
+        dialogHbox.setAlignment(Pos.CENTER);
+        dialogHbox.setFillHeight(true);
+
+        Button yesButton = new Button("Yes, Save");
+        yesButton.getStyleClass().add("container_sub_child");
+        yesButton.setStyle("-fx-border-width: 1px; -fx-border-color: white;");
+        yesButton.setOnAction((ActionEvent e) -> {
+            try {
+                saveList();
+                dialog.close();
+            } catch (IOException ex) {
+                System.err.println("Save Failed.");
+            }
+        });
+
+        Button noButton = new Button("No, Go Back");
+        noButton.getStyleClass().add("container_sub_child");
+        noButton.setStyle("-fx-border-width: 1px; -fx-border-color: white;");
+        noButton.setOnAction((ActionEvent e) -> {
+            System.out.println("Save Cancelled.");
+            dialog.close();
+        });
+
+        dialogHbox.getChildren().add(yesButton);
+        dialogHbox.getChildren().add(noButton);
+
+        dialogVbox.getChildren().add(dialogLabel);
+        dialogVbox.getChildren().add(dialogHbox);
+
+        // display dialog box
         Scene dialogScene = new Scene(dialogVbox, 300, 200);
+        dialogScene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
         dialog.setScene(dialogScene);
         dialog.show();
-    
-        // System.out.println("app list: " + App.getSpecificList() + "; new list: " + specific_list_label.getText());
+    }
+
+    @FXML
+    @SuppressWarnings("unused")
+    private void saveList() throws IOException { 
+        System.out.println("app list: " + App.getSpecificList() + "; new list: " + specific_list_label.getText());
 
         // call the SQLController's updateList() function with App.getSpecificList(), specific_list_label.getText(), and the ArrayList
-        // db.updateList(App.getSpecificList(), specific_list_label.getText(), list_items);
+        db.updateList(App.getSpecificList(), specific_list_label.getText(), list_items);
 
         // output save message to console
-        // System.out.println("List Successfully Saved!");
+        System.out.println("List Successfully Saved!");
     }
 
     @FXML

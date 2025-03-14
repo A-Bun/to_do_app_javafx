@@ -31,7 +31,7 @@
                         <Button fx:id="options_button" text="Options" width="${right_content.width}" styleClass="right_content_button" onAction="#closeDB" />
                         <Button fx:id="undo_button" text="Undo" minWidth="${options_button.width}" styleClass="right_content_button" />
                         <Button fx:id="redo_button" text="Redo" minWidth="${options_button.width}" styleClass="right_content_button" />
-                        <Button fx:id="save_button" text="Save" minWidth="${options_button.width}" styleClass="right_content_button" onAction="#saveList" />
+                        <Button fx:id="save_button" text="Save" minWidth="${options_button.width}" styleClass="right_content_button" onAction="#saveDialog" />
                     </children>
                 </VBox>
             </right>
