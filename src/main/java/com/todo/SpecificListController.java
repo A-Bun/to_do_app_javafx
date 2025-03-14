@@ -2,7 +2,9 @@ package com.todo;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.ResourceBundle;
 
 import org.bson.types.ObjectId;
@@ -35,12 +37,18 @@ public class SpecificListController implements Initializable {
     @FXML private Label specific_list_label;
     @FXML private Button all_lists_button;
     @FXML private Button specific_list_edit;
+    @FXML private Button undo_button;
+    @FXML private Button redo_button;
     @FXML private Button save_button;
     @FXML private HBox top_content;
     @FXML private VBox list_container;
     private ArrayList<ListItem> list_items;
     private SQLController db;
     private boolean editing = false;
+    private final int undo_limit = 50;
+    private ListState initial_state;
+    private final Deque<ListState> undo_stack = new ArrayDeque<>();
+    private final Deque<ListState> redo_stack = new ArrayDeque<>();
 
     @FXML
     @Override
@@ -51,6 +59,8 @@ public class SpecificListController implements Initializable {
 
         all_lists_button.getStyleClass().add("all_lists_border");
         specific_list_edit.getStyleClass().add("edit_border");
+        undo_button.setDisable(true);
+        redo_button.setDisable(true);
         
         String current_list = App.getSpecificList();
         specific_list_label.setText(current_list);
@@ -59,6 +69,8 @@ public class SpecificListController implements Initializable {
         System.out.println("Specific List: " + current_list);
         
         list_items = db.getList(current_list);
+
+        initial_state = new ListState(current_list, list_items);
 
         if(list_items.isEmpty()) {
             /* Start the page in Edit mode to see the Add Item button */
@@ -132,6 +144,8 @@ public class SpecificListController implements Initializable {
         add_item_button.setOnAction((ActionEvent e) -> {
             System.out.println("adding new item...");
             specific_list_edit.setDisable(true);
+            undo_button.setDisable(true);
+            redo_button.setDisable(true);
             
             Button new_item_button = new Button();
             new_item_button.getStyleClass().add("container_sub_child");
@@ -141,6 +155,8 @@ public class SpecificListController implements Initializable {
 
             new_item_button.setContextMenu(addNewMenuItem(new ContextMenu(), "Rename", (ActionEvent ae) -> {
                 specific_list_edit.setDisable(true);
+                undo_button.setDisable(true);
+                redo_button.setDisable(true);
                 TextField rename_item = new TextField(new_item_button.getText());
                 rename_item.getStyleClass().add("container_sub_child_tf");
                 rename_item.setOnAction((ActionEvent sae) -> {
@@ -153,8 +169,10 @@ public class SpecificListController implements Initializable {
                         child_hbox.getChildren().indexOf(rename_item);
                         child_hbox.getChildren().remove(rename_item);
                         child_hbox.getChildren().add(new_item_button);
+                        updateStack();
                         if(!stillRenaming()) {
                             specific_list_edit.setDisable(false);
+                            enableUndoRedo();
                         }
                     }});
                 HBox child_hbox = (HBox)new_item_button.getParent();
@@ -170,8 +188,10 @@ public class SpecificListController implements Initializable {
                 String item_id = list_items.get(list_container.getChildren().indexOf(parent)).getId();
                 deleteListItem(item_id, new_item_button.getText());
                 list_container.getChildren().remove(parent);
+                updateStack();
                 if(!stillRenaming()) {
                     specific_list_edit.setDisable(false);
+                    enableUndoRedo();
                 }
 
                 if(list_container.getChildren().size() <= 1) {
@@ -192,8 +212,10 @@ public class SpecificListController implements Initializable {
                     parent_hbox.getChildren().add(new_item_button);
                     if(!stillRenaming()) {
                         specific_list_edit.setDisable(false);
+                        enableUndoRedo();
                     }
                     addListItem(trimmed_name, false);
+                    updateStack();
                     toggleListStatus();
                 }});
             new_hbox.getChildren().add(new_item);
@@ -205,6 +227,8 @@ public class SpecificListController implements Initializable {
         specific_list_edit.getStyleClass().add("edit_button_on");
         specific_list_label.setContextMenu(addNewMenuItem(new ContextMenu(), "Rename", (ActionEvent e) -> {
                 specific_list_edit.setDisable(true);
+                undo_button.setDisable(true);
+                redo_button.setDisable(true);
                 TextField rename_item = new TextField(specific_list_label.getText());
                 rename_item.getStyleClass().add("list_header_tf");
                 rename_item.setMaxWidth(500);
@@ -216,8 +240,10 @@ public class SpecificListController implements Initializable {
                         specific_list_label.setText(trimmed_name);
                         top_content.getChildren().remove(rename_item);
                         top_content.getChildren().add(1, specific_list_label);
+                        updateStack();
                         if(!stillRenaming()) {
                             specific_list_edit.setDisable(false);
+                            enableUndoRedo();
                         }
                     }});
                 top_content.getChildren().remove(specific_list_label);
@@ -237,8 +263,10 @@ public class SpecificListController implements Initializable {
                 String item_id = list_items.get(list_container.getChildren().indexOf(child_list_hbox)).getId();
                 deleteListItem(item_id, item.getText());
                 list_container.getChildren().remove(child_list_hbox);
+                updateStack();
                 if(!stillRenaming()) {
                     specific_list_edit.setDisable(false);
+                    enableUndoRedo();
                 }
 
                 if(list_container.getChildren().size() <= 1) {
@@ -250,6 +278,8 @@ public class SpecificListController implements Initializable {
 
             item.setContextMenu(addNewMenuItem(new ContextMenu(), "Rename", (ActionEvent e) -> {
                     specific_list_edit.setDisable(true);
+                    undo_button.setDisable(true);
+                    redo_button.setDisable(true);
                     TextField rename_item = new TextField(item.getText());
                     rename_item.getStyleClass().add("container_sub_child_tf");
                     rename_item.setOnAction((ActionEvent ae) -> {
@@ -260,8 +290,10 @@ public class SpecificListController implements Initializable {
                             item.setText(trimmed_name);
                             child_list_hbox.getChildren().remove(rename_item);
                             child_list_hbox.getChildren().add(item);
+                            updateStack();
                             if(!stillRenaming()) {
                                 specific_list_edit.setDisable(false);
+                                enableUndoRedo();
                             }
                         }});
                     child_list_hbox.getChildren().remove(item);
@@ -281,6 +313,7 @@ public class SpecificListController implements Initializable {
 
         save_button.setDisable(false);
         specific_list_edit.setDisable(false);
+        enableUndoRedo();
 
         specific_list_edit.getStyleClass().remove("edit_button_on");
         specific_list_label.getContextMenu().getItems().clear();
@@ -329,6 +362,7 @@ public class SpecificListController implements Initializable {
         Node parent = item_button.getParent();
         String item_id = list_items.get(list_container.getChildren().indexOf(parent)).getId();
         updateListItem(item_id, item_button.getText(), check);
+        updateStack();
 
         toggleListStatus();
     }
@@ -357,6 +391,16 @@ public class SpecificListController implements Initializable {
         }
         else if (!all_checked) {
             specific_list_label.getStyleClass().remove("checked_item");
+        }
+    }
+
+    private void enableUndoRedo() {
+        if(!undo_stack.isEmpty()) {
+            undo_button.setDisable(false);
+        }
+
+        if(!redo_stack.isEmpty()) {
+            redo_button.setDisable(false);
         }
     }
 
@@ -414,10 +458,170 @@ public class SpecificListController implements Initializable {
         System.out.println("Updated status of list item \"" + item_name + "\"");
     }
 
+    private void updateStack() {
+        /* Plan:
+         *  As actions are done on this list, call this function
+         *  Check to see if the current Undo stack is equal to the specified Undo limit
+         *  If at limit, pop the ListState at the bottom of the Undo stack off and continue
+         *  Create a new ListState for this current list's state after completing this action
+         *  Push that new ListState onto the top of the Undo stack
+         *  If the Redo stack is not empty, then clear the Redo stack
+         *  Done
+         */
+
+        ArrayList<ListItem> state_items = new ArrayList<>();
+
+        for (ListItem item : list_items) {
+            state_items.add(new ListItem(item.getId(), item.getName(), item.getStatus()));
+        }
+
+        if(undo_stack.size() >= undo_limit) {
+            System.out.println("   Removing bottom entry of Undo stack...");
+            undo_stack.pollLast();
+            initial_state = undo_stack.peekLast();
+        }
+
+        ListState curr_state = new ListState(specific_list_label.getText(), state_items);
+
+        undo_stack.offerFirst(curr_state);
+
+        if(!redo_stack.isEmpty()) {
+            System.out.println("   Clearing Redo stack...");
+            redo_stack.clear();
+        }
+
+        System.out.println("   Updating Undo stack... New Size = " + undo_stack.size());
+
+        enableUndoRedo();
+    }
+
+    private void updateListState(ListState state) {
+        /* Plan:
+         *  Set the List name to the name in the provided ListState (update specificListLabel)
+         *  Set the List items to the items in the provided ListState (reuse For loop from initialize() and call toggleListStatus() )
+         *  Done
+         */
+
+        
+        specific_list_label.setText(state.getName().trim());
+        list_items = state.getItems();
+
+        int button_cnt = list_container.getChildren().size();
+        int child_id = 0;
+        int loop_cnt = state.getItems().size();
+
+        if(editing) {
+            button_cnt--;
+            child_id++;
+        }
+
+        if(button_cnt > loop_cnt) {
+            loop_cnt = button_cnt;
+        }
+
+        for (int i = 0; i < loop_cnt; i++) {
+            if(i > button_cnt-1) { /* add new button */
+                ListItem item = state.getItems().get(i);
+
+                Button current_item = new Button(item.getName());
+                current_item.getStyleClass().add("container_sub_child");
+                // current_item.setMinWidth(current_item_box.getWidth());
+                current_item.setOnAction((ActionEvent e) -> {
+                    toggleItemStatus(current_item);
+                });
+
+                if(item.getStatus()) {
+                    current_item.getStyleClass().add("checked_item");
+                }
+
+                createContainerChild(current_item, 0);
+            }
+            else if(i > state.getItems().size()-1) { /* delete the button */
+               list_container.getChildren().remove(i);
+            }
+            else { /* update the button text */
+                ListItem item = state.getItems().get(i);
+
+                HBox obj = (HBox)list_container.getChildren().get(i);
+                Button item_button = ((Button)obj.getChildren().get(child_id));
+                
+                item_button.setText(item.getName().trim());   
+                
+                // if(item_button.getStyleClass().contains("checked_item")) {
+                //     item_button.getStyleClass().remove("checked_item");
+                // }
+                // else {
+                //     item_button.getStyleClass().add("checked_item");
+                // }
+            }
+        }
+        
+        toggleListStatus();
+        
+        System.out.println("   Updating List State...");
+    }
+
+    @FXML
+    @SuppressWarnings("unused")
+    private void undo() {
+        /* Plan:
+         *  When the Undo button is pressed, call this function
+         *  Store the ListState at the top of the Undo stack into a variable to use later
+         *  Pop that ListState at the top of the Undo stack off
+         *  Push that ListState you stored onto the top of the Redo stack
+         *  Call updateListState() with the ListState that is at the top of the Undo stack now
+         *  Done
+         */
+
+        ListState state_to_peek;
+        ListState redo_state = undo_stack.pollFirst();
+
+        redo_stack.offerFirst(redo_state);
+
+        System.out.println("   Undo-ing... State pushed to Redo stack...");
+
+        if(!undo_stack.isEmpty()) {
+            state_to_peek = undo_stack.peekFirst();
+        }
+        else {
+            state_to_peek = initial_state;
+        }
+
+        updateListState(state_to_peek);
+    }
+
+    @FXML
+    @SuppressWarnings("unused")
+    private void redo() {
+        /* Plan:
+         *  When the Redo button is pressed, call this function
+         *  Store the ListState at the top of the Redo stack into a variable to use later
+         *  Pop that ListState at the top of the Redo stack off
+         *  Push that ListState you stored onto the top of the Undo stack
+         *  Call updateListState() with the ListState that is at the top of the Undo Stack now
+         *  Done
+         */
+
+        ListState state_to_peek;
+        ListState undo_state = redo_stack.pollFirst();
+
+        undo_stack.offerFirst(undo_state);
+
+        System.out.println("   Redo-ing... State pushed to Undo stack...");
+
+        if(!redo_stack.isEmpty()) {
+            state_to_peek = redo_stack.peekFirst();
+        }
+        else {
+            state_to_peek = initial_state;
+        }
+
+        updateListState(state_to_peek);
+    }
+
     @FXML
     @SuppressWarnings("unused")
     private void saveDialog() { 
-        // TO DO: The code below creates a dialog window! Review it to understand, then edit it for "Are you sure you want to save?"
         final Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         // dialog.initOwner(App.getRoot()); -- might not need this (custom funtion that returns stage from App)
@@ -425,24 +629,24 @@ public class SpecificListController implements Initializable {
         dialog.setTitle("Save Changes?");
         
         // create outer dialog box
-        VBox dialogVbox = new VBox(20);
-        dialogVbox.setAlignment(Pos.CENTER);
-        dialogVbox.getStyleClass().add("full_page");
-        dialogVbox.setPadding(new Insets(20));
+        VBox dialog_vbox = new VBox(20);
+        dialog_vbox.setAlignment(Pos.CENTER);
+        dialog_vbox.getStyleClass().add("full_page");
+        dialog_vbox.setPadding(new Insets(20));
 
         // create details of dialog box
-        Label dialogLabel = new Label("Are you sure you want to save your changes?");
-        dialogLabel.setTextAlignment(TextAlignment.CENTER);
-        dialogLabel.getStyleClass().add("header_label");
+        Label dialog_label = new Label("Are you sure you want to save your changes?");
+        dialog_label.setTextAlignment(TextAlignment.CENTER);
+        dialog_label.getStyleClass().add("header_label");
 
-        HBox dialogHbox = new HBox(20);
-        dialogHbox.setAlignment(Pos.CENTER);
-        dialogHbox.setFillHeight(true);
+        HBox dialog_hbox = new HBox(20);
+        dialog_hbox.setAlignment(Pos.CENTER);
+        dialog_hbox.setFillHeight(true);
 
-        Button yesButton = new Button("Yes, Save");
-        yesButton.getStyleClass().add("container_sub_child");
-        yesButton.setStyle("-fx-border-width: 1px; -fx-border-color: white;");
-        yesButton.setOnAction((ActionEvent e) -> {
+        Button yes_button = new Button("Yes, Save");
+        yes_button.getStyleClass().add("container_sub_child");
+        yes_button.setStyle("-fx-border-width: 1px; -fx-border-color: white;");
+        yes_button.setOnAction((ActionEvent e) -> {
             try {
                 saveList();
                 dialog.close();
@@ -451,24 +655,24 @@ public class SpecificListController implements Initializable {
             }
         });
 
-        Button noButton = new Button("No, Go Back");
-        noButton.getStyleClass().add("container_sub_child");
-        noButton.setStyle("-fx-border-width: 1px; -fx-border-color: white;");
-        noButton.setOnAction((ActionEvent e) -> {
+        Button no_button = new Button("No, Go Back");
+        no_button.getStyleClass().add("container_sub_child");
+        no_button.setStyle("-fx-border-width: 1px; -fx-border-color: white;");
+        no_button.setOnAction((ActionEvent e) -> {
             System.out.println("Save Cancelled.");
             dialog.close();
         });
 
-        dialogHbox.getChildren().add(yesButton);
-        dialogHbox.getChildren().add(noButton);
+        dialog_hbox.getChildren().add(yes_button);
+        dialog_hbox.getChildren().add(no_button);
 
-        dialogVbox.getChildren().add(dialogLabel);
-        dialogVbox.getChildren().add(dialogHbox);
+        dialog_vbox.getChildren().add(dialog_label);
+        dialog_vbox.getChildren().add(dialog_hbox);
 
         // display dialog box
-        Scene dialogScene = new Scene(dialogVbox, 300, 200);
-        dialogScene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
-        dialog.setScene(dialogScene);
+        Scene dialog_scene = new Scene(dialog_vbox, 300, 200);
+        dialog_scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
+        dialog.setScene(dialog_scene);
         dialog.show();
     }
 

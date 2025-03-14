@@ -29,8 +29,8 @@
                 <VBox fx:id="right_content" fillWidth="true" style="-fx-border-width:0px 0px 0px 1px; -fx-border-color:white">
                     <children>
                         <Button fx:id="options_button" text="Options" width="${right_content.width}" styleClass="right_content_button" onAction="#closeDB" />
-                        <Button fx:id="undo_button" text="Undo" minWidth="${options_button.width}" styleClass="right_content_button" />
-                        <Button fx:id="redo_button" text="Redo" minWidth="${options_button.width}" styleClass="right_content_button" />
+                        <Button fx:id="undo_button" text="Undo" minWidth="${options_button.width}" styleClass="right_content_button" onAction="#undo" />
+                        <Button fx:id="redo_button" text="Redo" minWidth="${options_button.width}" styleClass="right_content_button" onAction="#redo" />
                         <Button fx:id="save_button" text="Save" minWidth="${options_button.width}" styleClass="right_content_button" onAction="#saveDialog" />
                     </children>
                 </VBox>
