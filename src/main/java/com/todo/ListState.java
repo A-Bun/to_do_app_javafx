@@ -7,9 +7,26 @@ public class ListState {
     private ArrayList<ListItem> items;
 
     public ListState(String l_name, ArrayList<ListItem> l_items) {
+        ArrayList<ListItem> state_items = new ArrayList<>();
+
+        for (ListItem item : l_items) {
+            state_items.add(new ListItem(item.getId(), item.getName(), item.getStatus()));
+        }
+
         name = l_name;
-        items = l_items;
+        items = state_items;
     }
+
+    // public ListState(ListState other_state) {
+    //     ArrayList<ListItem> state_items = new ArrayList<>();
+
+    //     for (ListItem item : other_state.getItems()) {
+    //         state_items.add(new ListItem(item.getId(), item.getName(), item.getStatus()));
+    //     }
+
+    //     name = other_state.getName();
+    //     items = state_items;
+    // }
 
     public String getName() {
         return name;
@@ -27,13 +44,14 @@ public class ListState {
         items = new_items;
     }
 
+    /* DEBUGGING USE ONLY - TO BE DELETED */
     public void printState() {
         System.out.println("{ STATE: ");
         System.out.println("    name = \"" + name + "\"");
         System.out.println("    items = [ ");
 
         for (ListItem item : items) {
-            System.out.print("          \"" + item.getName());
+            System.out.print("          \"" + item.getId() + " - " + item.getName());
 
             if(item.getStatus()) {
                 System.out.println("\" *checked*");

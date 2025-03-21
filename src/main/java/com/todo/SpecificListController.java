@@ -71,6 +71,7 @@ public class SpecificListController implements Initializable {
         list_items = db.getList(current_list);
 
         initial_state = new ListState(current_list, list_items);
+        // initial_state.printState();
 
         if(list_items.isEmpty()) {
             /* Start the page in Edit mode to see the Add Item button */
@@ -93,8 +94,11 @@ public class SpecificListController implements Initializable {
                 if(item.getStatus()) {
                     current_item.getStyleClass().add("checked_item");
                 }
+                
+                ArrayList<Node> new_nodes = new ArrayList<>();
+                new_nodes.add(current_item);
 
-                createContainerChild(current_item, 0);
+                createContainerChild(new_nodes, 0);
             }
             
             toggleListStatus();
@@ -120,13 +124,15 @@ public class SpecificListController implements Initializable {
         }
     }
 
-    private HBox createContainerChild(Node sub_child, int placement) {
+    private HBox createContainerChild(ArrayList<Node> sub_children, int placement) {
         HBox current_item_box = new HBox();
         current_item_box.setFillHeight(true);
         current_item_box.getStyleClass().add("container_sub");
         current_item_box.setAlignment(Pos.CENTER_LEFT);
 
-        current_item_box.getChildren().add(sub_child);
+        for(Node sub_child : sub_children) {
+            current_item_box.getChildren().add(sub_child);
+        }
 
         list_container.getChildren().add(list_container.getChildren().size() - placement, current_item_box);
 
@@ -199,7 +205,11 @@ public class SpecificListController implements Initializable {
                 }
                 toggleListStatus();
             });
-            HBox new_hbox = createContainerChild(delete_button, 1);
+
+            ArrayList<Node> new_nodes = new ArrayList<>();
+            new_nodes.add(delete_button);
+
+            HBox new_hbox = createContainerChild(new_nodes, 1);
             
             TextField new_item = new TextField();
             new_item.getStyleClass().add("container_sub_child_tf");
@@ -375,7 +385,6 @@ public class SpecificListController implements Initializable {
         if(editing) {
             child_count--;
             child_id = 1;
-            // child_id++; // add back with delete button in edit mode
         }
 
         for(int i = 0; i < child_count; i++) {
@@ -459,56 +468,40 @@ public class SpecificListController implements Initializable {
     }
 
     private void updateStack() {
-        /* Plan:
-         *  As actions are done on this list, call this function
-         *  Check to see if the current Undo stack is equal to the specified Undo limit
-         *  If at limit, pop the ListState at the bottom of the Undo stack off and continue
-         *  Create a new ListState for this current list's state after completing this action
-         *  Push that new ListState onto the top of the Undo stack
-         *  If the Redo stack is not empty, then clear the Redo stack
-         *  Done
-         */
-
-        ArrayList<ListItem> state_items = new ArrayList<>();
-
-        for (ListItem item : list_items) {
-            state_items.add(new ListItem(item.getId(), item.getName(), item.getStatus()));
-        }
-
         if(undo_stack.size() >= undo_limit) {
             System.out.println("   Removing bottom entry of Undo stack...");
-            undo_stack.pollLast();
-            initial_state = undo_stack.peekLast();
+            initial_state = undo_stack.pollLast();
         }
 
-        ListState curr_state = new ListState(specific_list_label.getText(), state_items);
+        ListState curr_state = new ListState(specific_list_label.getText(), list_items);
 
         undo_stack.offerFirst(curr_state);
 
         if(!redo_stack.isEmpty()) {
             System.out.println("   Clearing Redo stack...");
             redo_stack.clear();
+            redo_button.setDisable(true);
         }
 
-        System.out.println("   Updating Undo stack... New Size = " + undo_stack.size());
+        // System.out.println("   Updating Undo stack... New Size = " + undo_stack.size());
 
         enableUndoRedo();
     }
 
     private void updateListState(ListState state) {
-        /* Plan:
-         *  Set the List name to the name in the provided ListState (update specificListLabel)
-         *  Set the List items to the items in the provided ListState (reuse For loop from initialize() and call toggleListStatus() )
-         *  Done
-         */
-
-        
         specific_list_label.setText(state.getName().trim());
-        list_items = state.getItems();
+
+        ArrayList<ListItem> updated_state_items = new ArrayList<>();
+
+        for (ListItem item : state.getItems()) {
+            updated_state_items.add(new ListItem(item.getId(), item.getName(), item.getStatus()));
+        }
+
+        list_items = updated_state_items;
 
         int button_cnt = list_container.getChildren().size();
         int child_id = 0;
-        int loop_cnt = state.getItems().size();
+        int loop_cnt = list_items.size();
 
         if(editing) {
             button_cnt--;
@@ -521,102 +514,154 @@ public class SpecificListController implements Initializable {
 
         for (int i = 0; i < loop_cnt; i++) {
             if(i > button_cnt-1) { /* add new button */
-                ListItem item = state.getItems().get(i);
+                ListItem item = list_items.get(i);
+                ArrayList<Node> new_nodes = new ArrayList<>();
 
-                Button current_item = new Button(item.getName());
-                current_item.getStyleClass().add("container_sub_child");
-                // current_item.setMinWidth(current_item_box.getWidth());
-                current_item.setOnAction((ActionEvent e) -> {
-                    toggleItemStatus(current_item);
+                Button item_button = new Button(item.getName());
+                item_button.getStyleClass().add("container_sub_child");
+                // item_button.setMinWidth(item_button_box.getWidth());
+                item_button.setOnAction((ActionEvent e) -> {
+                    toggleItemStatus(item_button);
                 });
 
                 if(item.getStatus()) {
-                    current_item.getStyleClass().add("checked_item");
+                    item_button.getStyleClass().add("checked_item");
                 }
+                
+                new_nodes.add(item_button);
 
-                createContainerChild(current_item, 0);
+                if(editing) {
+                    item_button.setContextMenu(addNewMenuItem(new ContextMenu(), "Rename", (ActionEvent ae) -> {
+                        specific_list_edit.setDisable(true);
+                        undo_button.setDisable(true);
+                        redo_button.setDisable(true);
+                        TextField rename_item = new TextField(item_button.getText());
+                        rename_item.getStyleClass().add("container_sub_child_tf");
+                        rename_item.setOnAction((ActionEvent sae) -> {
+                            String trimmed_name = rename_item.getText().trim();
+                            if(!trimmed_name.isBlank()) {
+                                item_button.setText(trimmed_name);
+                                HBox child_hbox = (HBox)rename_item.getParent();
+                                ListItem item_to_rename = list_items.get(list_container.getChildren().indexOf(child_hbox));
+                                updateListItem(item_to_rename.getId(), item_to_rename.getName(), trimmed_name);
+                                child_hbox.getChildren().remove(rename_item);
+                                child_hbox.getChildren().add(item_button);
+                                updateStack();
+                                if(!stillRenaming()) {
+                                    specific_list_edit.setDisable(false);
+                                    enableUndoRedo();
+                                }
+                            }});
+                        HBox child_hbox = (HBox)item_button.getParent();
+                        child_hbox.getChildren().remove(item_button);
+                        child_hbox.getChildren().add(rename_item);
+                    }));
+
+                    Button delete_button = new Button();
+                    delete_button.setText("X");
+                    delete_button.getStyleClass().add("delete_button");
+                    delete_button.setOnAction((ActionEvent e) -> {
+                        ListItem item_to_delete = list_items.get(list_container.getChildren().indexOf(delete_button.getParent()));
+                        deleteListItem(item_to_delete.getId(), item_to_delete.getName());
+                        list_container.getChildren().remove(delete_button.getParent());
+                        updateStack();
+                        if(!stillRenaming()) {
+                            specific_list_edit.setDisable(false);
+                            enableUndoRedo();
+                        }
+
+                        if(list_container.getChildren().size() <= 1) {
+                            specific_list_edit.setDisable(true);
+                        }
+                        toggleListStatus();
+                    });
+
+                    new_nodes.add(0, delete_button);
+                    createContainerChild(new_nodes, 1);
+                }
+                else {
+                    createContainerChild(new_nodes, 0);
+                }
             }
-            else if(i > state.getItems().size()-1) { /* delete the button */
+            else if(i > list_items.size()-1) { /* delete the button */
                list_container.getChildren().remove(i);
             }
             else { /* update the button text */
-                ListItem item = state.getItems().get(i);
+                ListItem item = list_items.get(i);
 
-                HBox obj = (HBox)list_container.getChildren().get(i);
-                Button item_button = ((Button)obj.getChildren().get(child_id));
+                HBox child_hbox = (HBox)list_container.getChildren().get(i);
+                Button item_button = ((Button)child_hbox.getChildren().get(child_id));
                 
                 item_button.setText(item.getName().trim());   
                 
-                // if(item_button.getStyleClass().contains("checked_item")) {
-                //     item_button.getStyleClass().remove("checked_item");
-                // }
-                // else {
-                //     item_button.getStyleClass().add("checked_item");
-                // }
+                if(item_button.getStyleClass().contains("checked_item") && !item.getStatus()) {
+                    item_button.getStyleClass().remove("checked_item");
+                }
+                else if (!item_button.getStyleClass().contains("checked_item") && item.getStatus()) {
+                    item_button.getStyleClass().add("checked_item");
+                }
             }
         }
         
         toggleListStatus();
         
-        System.out.println("   Updating List State...");
+        // System.out.println("   Updating List State...");
     }
 
     @FXML
     @SuppressWarnings("unused")
     private void undo() {
-        /* Plan:
-         *  When the Undo button is pressed, call this function
-         *  Store the ListState at the top of the Undo stack into a variable to use later
-         *  Pop that ListState at the top of the Undo stack off
-         *  Push that ListState you stored onto the top of the Redo stack
-         *  Call updateListState() with the ListState that is at the top of the Undo stack now
-         *  Done
-         */
+        ListState state_to_use;
 
-        ListState state_to_peek;
-        ListState redo_state = undo_stack.pollFirst();
+        redo_stack.offerFirst(undo_stack.pollFirst());
 
-        redo_stack.offerFirst(redo_state);
+        // System.out.println("   Undo-ing... State pushed to Redo stack... Undo stack count: " + undo_stack.size());
 
-        System.out.println("   Undo-ing... State pushed to Redo stack...");
+        // System.out.println("Here is the state just pushed onto the Redo stack:");
+        // redo_state.printState();
 
         if(!undo_stack.isEmpty()) {
-            state_to_peek = undo_stack.peekFirst();
+            state_to_use = undo_stack.peekFirst();
         }
         else {
-            state_to_peek = initial_state;
+            state_to_use = initial_state;
         }
 
-        updateListState(state_to_peek);
+        updateListState(state_to_use);
+
+        if(undo_stack.isEmpty()) {
+            undo_button.setDisable(true);
+        }
+
+        enableUndoRedo();
     }
 
     @FXML
     @SuppressWarnings("unused")
     private void redo() {
-        /* Plan:
-         *  When the Redo button is pressed, call this function
-         *  Store the ListState at the top of the Redo stack into a variable to use later
-         *  Pop that ListState at the top of the Redo stack off
-         *  Push that ListState you stored onto the top of the Undo stack
-         *  Call updateListState() with the ListState that is at the top of the Undo Stack now
-         *  Done
-         */
+        ListState state_to_use;
 
-        ListState state_to_peek;
-        ListState undo_state = redo_stack.pollFirst();
+        undo_stack.offerFirst(redo_stack.peekFirst());
 
-        undo_stack.offerFirst(undo_state);
+        // System.out.println("   Redo-ing... State pushed to Undo stack... Redo stack count: " + redo_stack.size());
 
-        System.out.println("   Redo-ing... State pushed to Undo stack...");
+        // System.out.println("Here is the state just pushed onto the Undo stack:");
+        // undo_state.printState();
 
         if(!redo_stack.isEmpty()) {
-            state_to_peek = redo_stack.peekFirst();
+            state_to_use = redo_stack.pollFirst();
         }
         else {
-            state_to_peek = initial_state;
+            state_to_use = initial_state;
         }
 
-        updateListState(state_to_peek);
+        updateListState(state_to_use);
+
+        if(redo_stack.isEmpty()) {
+            redo_button.setDisable(true);
+        }
+
+        enableUndoRedo();
     }
 
     @FXML
