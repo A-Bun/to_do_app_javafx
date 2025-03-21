@@ -15,7 +15,7 @@
             <top>
                 <HBox fx:id="top_content" alignment="CENTER_RIGHT" fillHeight="true" style="-fx-border-width:0px 0px 1px 0px; -fx-border-color:white">
                     <children>
-                        <Button fx:id="all_lists_button" text="Go Back" onAction="#switchToAllListsView" styleClass="edit_button" prefHeight="${specific_list_label.height}" minWidth="70" HBox.hgrow="NEVER" />
+                        <Button fx:id="all_lists_button" text="Exit" onAction="#exitDialog" styleClass="edit_button" prefHeight="${specific_list_label.height}" minWidth="70" HBox.hgrow="NEVER" />
                         <Label fx:id="specific_list_label" text="Specific List View" styleClass="header_label" maxWidth="500" HBox.hgrow="ALWAYS">
                             <padding>
                                 <Insets top="0" right="10.0" bottom="0" left="10.0" />
@@ -28,7 +28,7 @@
             <right>
                 <VBox fx:id="right_content" fillWidth="true" style="-fx-border-width:0px 0px 0px 1px; -fx-border-color:white">
                     <children>
-                        <Button fx:id="options_button" text="Options" width="${right_content.width}" styleClass="right_content_button" onAction="#closeDB" />
+                        <Button fx:id="options_button" text="Options" width="${right_content.width}" styleClass="right_content_button" />
                         <Button fx:id="undo_button" text="Undo" minWidth="${options_button.width}" styleClass="right_content_button" onAction="#undo" />
                         <Button fx:id="redo_button" text="Redo" minWidth="${options_button.width}" styleClass="right_content_button" onAction="#redo" />
                         <Button fx:id="save_button" text="Save" minWidth="${options_button.width}" styleClass="right_content_button" onAction="#saveDialog" />

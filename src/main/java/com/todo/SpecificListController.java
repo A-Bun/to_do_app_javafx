@@ -46,7 +46,8 @@ public class SpecificListController implements Initializable {
     private SQLController db;
     private boolean editing = false;
     private final int undo_limit = 50;
-    private ListState initial_state;
+    private ListState original_state;
+    private ListState base_state;
     private final Deque<ListState> undo_stack = new ArrayDeque<>();
     private final Deque<ListState> redo_stack = new ArrayDeque<>();
 
@@ -61,6 +62,7 @@ public class SpecificListController implements Initializable {
         specific_list_edit.getStyleClass().add("edit_border");
         undo_button.setDisable(true);
         redo_button.setDisable(true);
+        save_button.setDisable(true);
         
         String current_list = App.getSpecificList();
         specific_list_label.setText(current_list);
@@ -70,8 +72,9 @@ public class SpecificListController implements Initializable {
         
         list_items = db.getList(current_list);
 
-        initial_state = new ListState(current_list, list_items);
-        // initial_state.printState();
+        original_state = new ListState(current_list, list_items);
+        base_state = new ListState(current_list, list_items);
+        // base_state.printState();
 
         if(list_items.isEmpty()) {
             /* Start the page in Edit mode to see the Add Item button */
@@ -105,8 +108,6 @@ public class SpecificListController implements Initializable {
         }
     }
 
-    @FXML
-    @SuppressWarnings("unused")
     private void switchToAllListsView() throws IOException {
         App.setRoot("AllListsView");
     }
@@ -470,7 +471,7 @@ public class SpecificListController implements Initializable {
     private void updateStack() {
         if(undo_stack.size() >= undo_limit) {
             System.out.println("   Removing bottom entry of Undo stack...");
-            initial_state = undo_stack.pollLast();
+            base_state = undo_stack.pollLast();
         }
 
         ListState curr_state = new ListState(specific_list_label.getText(), list_items);
@@ -486,6 +487,7 @@ public class SpecificListController implements Initializable {
         // System.out.println("   Updating Undo stack... New Size = " + undo_stack.size());
 
         enableUndoRedo();
+        toggleSave();
     }
 
     private void updateListState(ListState state) {
@@ -604,7 +606,7 @@ public class SpecificListController implements Initializable {
         }
         
         toggleListStatus();
-        
+        toggleSave();
         // System.out.println("   Updating List State...");
     }
 
@@ -624,7 +626,7 @@ public class SpecificListController implements Initializable {
             state_to_use = undo_stack.peekFirst();
         }
         else {
-            state_to_use = initial_state;
+            state_to_use = base_state;
         }
 
         updateListState(state_to_use);
@@ -652,7 +654,7 @@ public class SpecificListController implements Initializable {
             state_to_use = redo_stack.pollFirst();
         }
         else {
-            state_to_use = initial_state;
+            state_to_use = base_state;
         }
 
         updateListState(state_to_use);
@@ -662,6 +664,84 @@ public class SpecificListController implements Initializable {
         }
 
         enableUndoRedo();
+    }
+
+    private void toggleSave() {
+        if(original_state.isEqual(new ListState(specific_list_label.getText(), list_items))) {
+            save_button.setDisable(true);
+        }
+        else if(!editing) {
+            save_button.setDisable(false);
+        }
+    }
+
+    @FXML
+    @SuppressWarnings("unused")
+    private void exitDialog() { 
+        if(original_state.isEqual(new ListState(specific_list_label.getText(), list_items)))
+        {
+            try {
+                System.out.println("No changes found... Exiting...");
+                switchToAllListsView();
+            } catch (IOException ex) {
+                System.err.println("Exit Failed.");
+            }
+            return;
+        }
+
+        final Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        // dialog.initOwner(App.getRoot()); -- might not need this (custom funtion that returns stage from App)
+        dialog.setResizable(false);
+        dialog.setTitle("Exit Without Saving Changes?");
+        
+        // create outer dialog box
+        VBox dialog_vbox = new VBox(20);
+        dialog_vbox.setAlignment(Pos.CENTER);
+        dialog_vbox.getStyleClass().add("full_page");
+        dialog_vbox.setPadding(new Insets(20));
+
+        // create details of dialog box
+        Label dialog_label = new Label("Are you sure you want to exit without saving your changes?");
+        dialog_label.setTextAlignment(TextAlignment.CENTER);
+        dialog_label.getStyleClass().add("header_label");
+
+        HBox dialog_hbox = new HBox(20);
+        dialog_hbox.setAlignment(Pos.CENTER);
+        dialog_hbox.setFillHeight(true);
+
+        Button yes_button = new Button("Yes, Exit Without Saving");
+        yes_button.getStyleClass().add("container_sub_child");
+        yes_button.setStyle("-fx-border-width: 1px; -fx-border-color: white;");
+        yes_button.setOnAction((ActionEvent e) -> {
+            try {
+                System.out.println("Exit Granted.");
+                dialog.close();
+                switchToAllListsView();
+            } catch (IOException ex) {
+                System.err.println("Exit Failed.");
+            }
+        });
+
+        Button no_button = new Button("No, Continue Editing");
+        no_button.getStyleClass().add("container_sub_child");
+        no_button.setStyle("-fx-border-width: 1px; -fx-border-color: white;");
+        no_button.setOnAction((ActionEvent e) -> {
+            System.out.println("Exit Cancelled.");
+            dialog.close();
+        });
+
+        dialog_hbox.getChildren().add(yes_button);
+        dialog_hbox.getChildren().add(no_button);
+
+        dialog_vbox.getChildren().add(dialog_label);
+        dialog_vbox.getChildren().add(dialog_hbox);
+
+        // display dialog box
+        Scene dialog_scene = new Scene(dialog_vbox, 400, 200);
+        dialog_scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
+        dialog.setScene(dialog_scene);
+        dialog.show();
     }
 
     @FXML
@@ -731,11 +811,13 @@ public class SpecificListController implements Initializable {
 
         // output save message to console
         System.out.println("List Successfully Saved!");
-    }
 
-    @FXML
-    @SuppressWarnings("unused")
-    private void closeDB(ActionEvent e) {
-        db.closeConnection();
+        undo_stack.clear();
+        undo_button.setDisable(true);
+        redo_stack.clear();
+        redo_button.setDisable(true);
+        original_state = new ListState(specific_list_label.getText(), list_items);
+        base_state = new ListState(specific_list_label.getText(), list_items);
+        toggleSave();
     }
 }

@@ -44,6 +44,24 @@ public class ListState {
         items = new_items;
     }
 
+    public boolean isEqual(ListState state_to_compare) {
+        boolean result = true;
+
+        if(state_to_compare.getName().equals(name) && state_to_compare.getItems().size() == items.size()) {
+            for(int i = 0; i < items.size(); i++) {
+                if(!state_to_compare.getItems().get(i).isEqual(items.get(i))) {
+                    result = false;
+                    break;
+                }
+            }
+        }
+        else {
+            result = false;
+        }
+
+        return result;
+    }
+
     /* DEBUGGING USE ONLY - TO BE DELETED */
     public void printState() {
         System.out.println("{ STATE: ");

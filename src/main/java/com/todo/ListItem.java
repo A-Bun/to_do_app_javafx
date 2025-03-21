@@ -35,4 +35,14 @@ public class ListItem {
     public void setStatus(boolean new_status) {
         checked = new_status;
     }
+
+    public boolean isEqual(ListItem item_to_compare) {
+        boolean result = false;
+
+        if(item_to_compare.getId().equals(id) && item_to_compare.getName().equals(name) && item_to_compare.getStatus() == checked) {
+            result = true;
+        }
+
+        return result;
+    }
 }

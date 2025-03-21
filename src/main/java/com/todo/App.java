@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 /**
  * JavaFX App
@@ -25,6 +26,9 @@ public class App extends Application {
         stage.setScene(scene);
         stage.setTitle("To-Do Tracker");
         stage.resizableProperty().set(false); // TO-DO: Make window and font size resizable
+        stage.setOnCloseRequest((WindowEvent e) -> {
+            sqlctrl.closeConnection();
+        });
         stage.show();
     }
 

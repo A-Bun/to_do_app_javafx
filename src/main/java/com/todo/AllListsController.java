@@ -102,7 +102,6 @@ public class AllListsController implements Initializable{
 
         global_settings.setOnAction((ActionEvent e) -> {
             System.out.println("Global: " + global_settings.getWidth());
-            db.closeConnection();
         });
         
         new_list_trigger.setOnAction((ActionEvent e) -> {
