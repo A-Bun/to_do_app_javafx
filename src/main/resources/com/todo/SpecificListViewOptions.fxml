@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ScrollBar?>
+<?import javafx.geometry.Insets?>
+
+<HBox spacing="0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" styleClass="full_page">
+   <children>
+      <HBox alignment="CENTER" spacing="20.0" fillHeight="true" HBox.hgrow="ALWAYS" styleClass="full_page">
+         <children>
+            <Label fx:id="all_lists_label" text="This is a new scene!" styleClass="header_label" />
+         </children>
+         <padding>
+            <Insets top="80.0" right="52.0" bottom="100.0" left="200.0" /> <!-- Reset right to 52.0 when settings button is fixed -->
+         </padding>
+      </HBox>
+   </children>
+   <padding>
+      <Insets top="20.0" right="20.0" bottom="0" left="0" />
+   </padding>
+</HBox>

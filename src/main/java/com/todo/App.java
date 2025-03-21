@@ -15,6 +15,7 @@ import javafx.stage.WindowEvent;
 public class App extends Application {
 
     private static Scene scene;
+    private static Stage main_stage;
     private final static SQLController sqlctrl = new SQLController();
     private static String specific_list;
 
@@ -29,7 +30,12 @@ public class App extends Application {
         stage.setOnCloseRequest((WindowEvent e) -> {
             sqlctrl.closeConnection();
         });
+        main_stage = stage;
         stage.show();
+    }
+
+    static Stage getRoot() {
+        return main_stage;
     }
 
     static void setRoot(String fxml) throws IOException {

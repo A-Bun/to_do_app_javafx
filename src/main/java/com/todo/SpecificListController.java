@@ -12,6 +12,7 @@ import org.bson.types.ObjectId;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -30,6 +31,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class SpecificListController implements Initializable {
     @FXML private BorderPane border_pane;
@@ -50,6 +52,7 @@ public class SpecificListController implements Initializable {
     private ListState base_state;
     private final Deque<ListState> undo_stack = new ArrayDeque<>();
     private final Deque<ListState> redo_stack = new ArrayDeque<>();
+    private final Scene curr_scene = App.getRoot().getScene();
 
     @FXML
     @Override
@@ -673,6 +676,32 @@ public class SpecificListController implements Initializable {
         else if(!editing) {
             save_button.setDisable(false);
         }
+    }
+
+    @FXML
+    @SuppressWarnings("unused")
+    private void optionsMenu() { // TO-DO: Continue updating code to display Options Menu
+        final Stage dialog = App.getRoot(); // gets this window
+        try {
+            // when this window's close button is pressed...
+            dialog.setOnCloseRequest((WindowEvent ex) -> {
+                // prevent the window from actually closing
+                ex.consume();
+
+                // set this window's scene back to this scene
+                dialog.setScene(curr_scene);
+
+                // update the close request to actually close this window again (instead of preventing it)
+                dialog.setOnCloseRequest((WindowEvent wex) -> {});
+            });
+
+            // set this window's scene to the Options Menu scene
+            dialog.setScene(new Scene((new FXMLLoader((App.class.getResource("SpecificListViewOptions.fxml"))).load()))); 
+        }
+        catch (IOException ex) {
+            System.err.println("Scene Change Failed.");
+        }
+        
     }
 
     @FXML
