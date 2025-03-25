@@ -15,12 +15,9 @@
          <children>
             <Label fx:id="all_lists_label" text="This is a new scene!" styleClass="header_label" />
          </children>
-         <padding>
-            <Insets top="80.0" right="52.0" bottom="100.0" left="200.0" /> <!-- Reset right to 52.0 when settings button is fixed -->
-         </padding>
       </HBox>
    </children>
    <padding>
-      <Insets top="20.0" right="20.0" bottom="0" left="0" />
+      <Insets top="20.0" right="20.0" bottom="20.0" left="20.0" />
    </padding>
 </HBox>

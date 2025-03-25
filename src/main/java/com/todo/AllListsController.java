@@ -15,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -43,6 +44,21 @@ public class AllListsController implements Initializable{
 
         if(list_array.isEmpty()) {
             all_lists_edit.setDisable(true);
+        }
+        else {
+            list_container.setOnMouseEntered((MouseEvent e) -> {
+                System.out.println("Resizing List Buttons");
+
+                // Resize the list buttons
+                for(int i = 1; i < list_container.getChildren().size()-1; i++) {
+                    HBox child_hbox = (HBox)list_container.getChildren().get(i);
+                    Button button = (Button)child_hbox.getChildren().get(0);
+                    button.setPrefWidth(child_hbox.getWidth());
+                }
+
+                // reset the mouse entered event
+                list_container.setOnMouseEntered((MouseEvent ae) -> {});
+            });
         }
 
         // for (Object list : list_array) {

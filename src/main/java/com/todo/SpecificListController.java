@@ -24,6 +24,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -108,7 +109,22 @@ public class SpecificListController implements Initializable {
             }
             
             toggleListStatus();
+
+            list_container.setOnMouseEntered((MouseEvent e) -> {
+                System.out.println("Resizing List Item Buttons");
+
+                // Resize the list item buttons
+                for(Object child : list_container.getChildren()) {
+                    HBox child_hbox = (HBox)child;
+                    Button button = (Button)child_hbox.getChildren().get(0);
+                    button.setPrefWidth(child_hbox.getWidth());
+                }
+
+                // reset the mouse entered event
+                list_container.setOnMouseEntered((MouseEvent ae) -> {});
+            });
         }
+
     }
 
     private void switchToAllListsView() throws IOException {
@@ -154,6 +170,7 @@ public class SpecificListController implements Initializable {
         add_item_button.setOnAction((ActionEvent e) -> {
             System.out.println("adding new item...");
             specific_list_edit.setDisable(true);
+            add_item_button.setDisable(true);
             undo_button.setDisable(true);
             redo_button.setDisable(true);
             
@@ -195,19 +212,30 @@ public class SpecificListController implements Initializable {
             delete_button.getStyleClass().add("delete_button");
             delete_button.setOnAction((ActionEvent ae) -> {
                 Node parent = delete_button.getParent();
-                String item_id = list_items.get(list_container.getChildren().indexOf(parent)).getId();
-                deleteListItem(item_id, new_item_button.getText());
-                list_container.getChildren().remove(parent);
-                updateStack();
-                if(!stillRenaming()) {
-                    specific_list_edit.setDisable(false);
-                    enableUndoRedo();
-                }
+                int parent_index = list_container.getChildren().indexOf(parent);
+                if(parent_index < list_items.size()) {
+                    String item_id = list_items.get(parent_index).getId();
+                    deleteListItem(item_id, new_item_button.getText());
+                    list_container.getChildren().remove(parent);
+                    updateStack();
+                    if(!stillRenaming()) {
+                        specific_list_edit.setDisable(false);
+                        enableUndoRedo();
+                    }
 
-                if(list_container.getChildren().size() <= 1) {
-                    specific_list_edit.setDisable(true);
+                    if(list_container.getChildren().size() <= 1) {
+                        specific_list_edit.setDisable(true);
+                    }
+                    toggleListStatus();
                 }
-                toggleListStatus();
+                else {
+                    list_container.getChildren().remove(parent);
+                    if(!stillRenaming()) {
+                        specific_list_edit.setDisable(false);
+                        add_item_button.setDisable(false);
+                        enableUndoRedo();
+                    }
+                }
             });
 
             ArrayList<Node> new_nodes = new ArrayList<>();
@@ -222,10 +250,12 @@ public class SpecificListController implements Initializable {
                 if(!trimmed_name.isBlank()) {
                     new_item_button.setText(trimmed_name);
                     HBox parent_hbox = (HBox)new_item.getParent();
+                    new_item_button.setPrefWidth(parent_hbox.getWidth());
                     parent_hbox.getChildren().remove(new_item);
                     parent_hbox.getChildren().add(new_item_button);
                     if(!stillRenaming()) {
                         specific_list_edit.setDisable(false);
+                        add_item_button.setDisable(false);
                         enableUndoRedo();
                     }
                     addListItem(trimmed_name, false);
@@ -274,19 +304,30 @@ public class SpecificListController implements Initializable {
             delete_button.setText("X");
             delete_button.getStyleClass().add("delete_button");
             delete_button.setOnAction((ActionEvent e) -> {
-                String item_id = list_items.get(list_container.getChildren().indexOf(child_list_hbox)).getId();
-                deleteListItem(item_id, item.getText());
-                list_container.getChildren().remove(child_list_hbox);
-                updateStack();
-                if(!stillRenaming()) {
-                    specific_list_edit.setDisable(false);
-                    enableUndoRedo();
-                }
+                int parent_index = list_container.getChildren().indexOf(child_list_hbox);
+                if(parent_index < list_items.size()) {
+                    String item_id = list_items.get(parent_index).getId();
+                    deleteListItem(item_id, item.getText());
+                    list_container.getChildren().remove(child_list_hbox);
+                    updateStack();
+                    if(!stillRenaming()) {
+                        specific_list_edit.setDisable(false);
+                        enableUndoRedo();
+                    }
 
-                if(list_container.getChildren().size() <= 1) {
-                    specific_list_edit.setDisable(true);
+                    if(list_container.getChildren().size() <= 1) {
+                        specific_list_edit.setDisable(true);
+                    }
+                    toggleListStatus();
                 }
-                toggleListStatus();
+                else {
+                    list_container.getChildren().remove(child_list_hbox);
+                    if(!stillRenaming()) {
+                        specific_list_edit.setDisable(false);
+                        add_item_button.setDisable(false);
+                        enableUndoRedo();
+                    }
+                }
             });
             child_list_hbox.getChildren().add(0, delete_button);
 
@@ -325,9 +366,9 @@ public class SpecificListController implements Initializable {
 
         System.out.println("Edit Mode Off");
 
-        save_button.setDisable(false);
         specific_list_edit.setDisable(false);
         enableUndoRedo();
+        toggleSave();
 
         specific_list_edit.getStyleClass().remove("edit_button_on");
         specific_list_label.getContextMenu().getItems().clear();
@@ -345,6 +386,12 @@ public class SpecificListController implements Initializable {
 
     private boolean stillRenaming() {
         boolean result = false;
+        int child_id = 0;
+
+        if(editing) {
+            child_id++;
+        }
+
         if(top_content.getChildren().get(1).getClass().getSimpleName().equals("TextField")) {
             result = true;
         }
@@ -352,7 +399,7 @@ public class SpecificListController implements Initializable {
         for (int i = 0; i < list_container.getChildren().size()-1; i++) {
             HBox child_list_hbox = (HBox)list_container.getChildren().get(i);
 
-            if(child_list_hbox.getChildren().get(0).getClass().getSimpleName().equals("TextField")) {
+            if(child_list_hbox.getChildren().get(child_id).getClass().getSimpleName().equals("TextField")) {
                 result = true;
                 break;
             }
@@ -489,8 +536,10 @@ public class SpecificListController implements Initializable {
 
         // System.out.println("   Updating Undo stack... New Size = " + undo_stack.size());
 
-        enableUndoRedo();
-        toggleSave();
+        if(!stillRenaming()) {
+            enableUndoRedo();
+            toggleSave();
+        }
     }
 
     private void updateListState(ListState state) {
@@ -524,7 +573,6 @@ public class SpecificListController implements Initializable {
 
                 Button item_button = new Button(item.getName());
                 item_button.getStyleClass().add("container_sub_child");
-                // item_button.setMinWidth(item_button_box.getWidth());
                 item_button.setOnAction((ActionEvent e) -> {
                     toggleItemStatus(item_button);
                 });
@@ -566,19 +614,30 @@ public class SpecificListController implements Initializable {
                     delete_button.setText("X");
                     delete_button.getStyleClass().add("delete_button");
                     delete_button.setOnAction((ActionEvent e) -> {
-                        ListItem item_to_delete = list_items.get(list_container.getChildren().indexOf(delete_button.getParent()));
-                        deleteListItem(item_to_delete.getId(), item_to_delete.getName());
-                        list_container.getChildren().remove(delete_button.getParent());
-                        updateStack();
-                        if(!stillRenaming()) {
-                            specific_list_edit.setDisable(false);
-                            enableUndoRedo();
-                        }
+                        Node parent = delete_button.getParent();
+                        int parent_index = list_container.getChildren().indexOf(parent);
+                        if(parent_index < list_items.size()) {
+                            ListItem item_to_delete = list_items.get(parent_index);
+                            deleteListItem(item_to_delete.getId(), item_to_delete.getName());
+                            list_container.getChildren().remove(parent);
+                            updateStack();
+                            if(!stillRenaming()) {
+                                specific_list_edit.setDisable(false);
+                                enableUndoRedo();
+                            }
 
-                        if(list_container.getChildren().size() <= 1) {
-                            specific_list_edit.setDisable(true);
+                            if(list_container.getChildren().size() <= 1) {
+                                specific_list_edit.setDisable(true);
+                            }
+                            toggleListStatus();
                         }
-                        toggleListStatus();
+                        else {
+                            list_container.getChildren().remove(parent);
+                            if(!stillRenaming()) {
+                                specific_list_edit.setDisable(false);
+                                enableUndoRedo();
+                            }
+                        }
                     });
 
                     new_nodes.add(0, delete_button);
@@ -586,6 +645,12 @@ public class SpecificListController implements Initializable {
                 }
                 else {
                     createContainerChild(new_nodes, 0);
+                }
+                
+                item_button.setPrefWidth(list_container.getWidth());
+                
+                if(!stillRenaming()) {
+                    specific_list_edit.setDisable(false);
                 }
             }
             else if(i > list_items.size()-1) { /* delete the button */
@@ -692,11 +757,17 @@ public class SpecificListController implements Initializable {
                 dialog.setScene(curr_scene);
 
                 // update the close request to actually close this window again (instead of preventing it)
-                dialog.setOnCloseRequest((WindowEvent wex) -> {});
+                dialog.setOnCloseRequest((WindowEvent wex) -> {
+                    db.closeConnection();
+                });
             });
 
+            // create options menu scene
+            Scene options_scene = new Scene((new FXMLLoader((App.class.getResource("SpecificListViewOptions.fxml"))).load()));
+            options_scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
+
             // set this window's scene to the Options Menu scene
-            dialog.setScene(new Scene((new FXMLLoader((App.class.getResource("SpecificListViewOptions.fxml"))).load()))); 
+            dialog.setScene(options_scene); 
         }
         catch (IOException ex) {
             System.err.println("Scene Change Failed.");
