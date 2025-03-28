@@ -192,11 +192,16 @@ public class SpecificListController implements Initializable {
                         new_item_button.setText(trimmed_name);
                         HBox child_hbox = (HBox)rename_item.getParent();
                         String item_id = list_items.get(list_container.getChildren().indexOf(child_hbox)).getId();
-                        updateListItem(item_id, new_item_button.getText(), trimmed_name);
+                        boolean updated = updateListItem(item_id, new_item_button.getText(), trimmed_name);
                         child_hbox.getChildren().indexOf(rename_item);
                         child_hbox.getChildren().remove(rename_item);
                         child_hbox.getChildren().add(new_item_button);
-                        updateStack();
+                        
+                        if(updated)
+                        {
+                            updateStack();
+                        }
+
                         if(!stillRenaming()) {
                             specific_list_edit.setDisable(false);
                             enableUndoRedo();
@@ -205,6 +210,11 @@ public class SpecificListController implements Initializable {
                 HBox child_hbox = (HBox)new_item_button.getParent();
                 child_hbox.getChildren().remove(new_item_button);
                 child_hbox.getChildren().add(rename_item);
+                rename_item.setPrefWidth(child_hbox.getWidth());
+
+                // automatically focus this TextField and select all text
+                rename_item.requestFocus();
+                rename_item.selectAll();
             }));
 
             Button delete_button = new Button();
@@ -263,6 +273,18 @@ public class SpecificListController implements Initializable {
                     toggleListStatus();
                 }});
             new_hbox.getChildren().add(new_item);
+
+            // list_container.setOnMouseEntered((MouseEvent me) -> { // TO-DO: Update to resize textbox on focus
+            //     System.out.println("Resizing New Item TextField");
+
+            //     new_item.setPrefWidth(new_hbox.getWidth());
+
+            //     // reset the mouse entered event
+            //     list_container.setOnMouseEntered((MouseEvent sme) -> {});
+            // });
+
+            new_item.requestFocus();
+            new_item.selectAll();
         });
         list_container.getChildren().add(add_item_button);
 
@@ -292,6 +314,8 @@ public class SpecificListController implements Initializable {
                     }});
                 top_content.getChildren().remove(specific_list_label);
                 top_content.getChildren().add(1, rename_item);
+                rename_item.requestFocus();
+                rename_item.selectAll();
                 HBox.setMargin(rename_item, specific_list_label.getInsets());
             }));
 
@@ -341,11 +365,16 @@ public class SpecificListController implements Initializable {
                         String trimmed_name = rename_item.getText().trim();
                         if(!trimmed_name.isBlank()) {
                             String item_id = list_items.get(list_container.getChildren().indexOf(child_list_hbox)).getId();
-                            updateListItem(item_id, item.getText(), trimmed_name);
+                            boolean updated = updateListItem(item_id, item.getText(), trimmed_name);
                             item.setText(trimmed_name);
                             child_list_hbox.getChildren().remove(rename_item);
                             child_list_hbox.getChildren().add(item);
-                            updateStack();
+                            
+                            if(updated)
+                            {
+                                updateStack();
+                            }
+
                             if(!stillRenaming()) {
                                 specific_list_edit.setDisable(false);
                                 enableUndoRedo();
@@ -353,6 +382,10 @@ public class SpecificListController implements Initializable {
                         }});
                     child_list_hbox.getChildren().remove(item);
                     child_list_hbox.getChildren().add(rename_item);
+                    rename_item.setPrefWidth(child_list_hbox.getWidth());
+
+                    rename_item.requestFocus();
+                    rename_item.selectAll();
                 }));
         }
     }
@@ -422,8 +455,12 @@ public class SpecificListController implements Initializable {
 
         Node parent = item_button.getParent();
         String item_id = list_items.get(list_container.getChildren().indexOf(parent)).getId();
-        updateListItem(item_id, item_button.getText(), check);
-        updateStack();
+        boolean updated = updateListItem(item_id, item_button.getText(), check);
+        
+        if(updated)
+        {
+            updateStack();
+        }
 
         toggleListStatus();
     }
@@ -498,24 +535,32 @@ public class SpecificListController implements Initializable {
         System.out.println("Deleted list item \"" + item_name + "\"");
     }
 
-    private void updateListItem(String item_id, String item_name, String new_item_name) {
+    private boolean updateListItem(String item_id, String item_name, String new_item_name) {
+        boolean result = false;
         ListItem item_to_update = getListItem(item_id, item_name);
         if(new_item_name != null && !new_item_name.equals(item_name))
         {
             item_to_update.setName(new_item_name);
         
+            result = true;
             System.out.println("Updated list item name to \"" + new_item_name + "\"");
         }
+
+        return result;
     }
 
-    private void updateListItem(String item_id, String item_name, boolean item_status) {
+    private boolean updateListItem(String item_id, String item_name, boolean item_status) {
+        boolean result = false;
         ListItem item_to_update = getListItem(item_id, item_name);
 
         if(item_status != item_to_update.getStatus()) {
             item_to_update.setStatus(item_status);
+            result = true;
         }
         
         System.out.println("Updated status of list item \"" + item_name + "\"");
+
+        return result;
     }
 
     private void updateStack() {
@@ -596,10 +641,15 @@ public class SpecificListController implements Initializable {
                                 item_button.setText(trimmed_name);
                                 HBox child_hbox = (HBox)rename_item.getParent();
                                 ListItem item_to_rename = list_items.get(list_container.getChildren().indexOf(child_hbox));
-                                updateListItem(item_to_rename.getId(), item_to_rename.getName(), trimmed_name);
+                                boolean updated = updateListItem(item_to_rename.getId(), item_to_rename.getName(), trimmed_name);
                                 child_hbox.getChildren().remove(rename_item);
                                 child_hbox.getChildren().add(item_button);
-                                updateStack();
+                                
+                                if(updated)
+                                {
+                                    updateStack();
+                                }
+
                                 if(!stillRenaming()) {
                                     specific_list_edit.setDisable(false);
                                     enableUndoRedo();
@@ -608,6 +658,9 @@ public class SpecificListController implements Initializable {
                         HBox child_hbox = (HBox)item_button.getParent();
                         child_hbox.getChildren().remove(item_button);
                         child_hbox.getChildren().add(rename_item);
+                        rename_item.setPrefWidth(child_hbox.getWidth());
+                        rename_item.requestFocus();
+                        rename_item.selectAll();
                     }));
 
                     Button delete_button = new Button();

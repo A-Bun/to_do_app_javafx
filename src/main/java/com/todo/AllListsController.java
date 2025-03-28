@@ -170,6 +170,9 @@ public class AllListsController implements Initializable{
             new_list_box.getChildren().add(list_name);
 
             list_container.getChildren().add(list_container.getChildren().size()-1, new_list_box);
+
+            // automatically focus this TextField
+            list_name.requestFocus();
         });
 
         new_list_trigger_box.getChildren().add(new_list_trigger);
