@@ -24,6 +24,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -54,6 +56,8 @@ public class SpecificListController implements Initializable {
     private final Deque<ListState> undo_stack = new ArrayDeque<>();
     private final Deque<ListState> redo_stack = new ArrayDeque<>();
     private final Scene curr_scene = App.getRoot().getScene();
+    private final Image unchecked_image = new Image(App.class.getResource("images/Checkbox-Unchecked.png").toExternalForm());
+    private final Image checked_image = new Image(App.class.getResource("images/Checkbox-Checked-V2.png").toExternalForm());
 
     @FXML
     @Override
@@ -91,7 +95,12 @@ public class SpecificListController implements Initializable {
             for (int i = 0; i < list_items.size(); i++) {
                 ListItem item = list_items.get(i);
 
+                ImageView checkbox = new ImageView(unchecked_image);
+                checkbox.setPreserveRatio(true);
+                checkbox.setFitWidth(18);
                 Button current_item = new Button(item.getName());
+                current_item.setGraphic(checkbox);
+                current_item.setGraphicTextGap(6);
                 current_item.getStyleClass().add("container_sub_child");
                 // current_item.setMinWidth(current_item_box.getWidth());
                 current_item.setOnAction((ActionEvent e) -> {
@@ -100,6 +109,7 @@ public class SpecificListController implements Initializable {
 
                 if(item.getStatus()) {
                     current_item.getStyleClass().add("checked_item");
+                    checkbox.setImage(checked_image);
                 }
                 
                 ArrayList<Node> new_nodes = new ArrayList<>();
@@ -174,8 +184,12 @@ public class SpecificListController implements Initializable {
             undo_button.setDisable(true);
             redo_button.setDisable(true);
             
+            ImageView checkbox = new ImageView(unchecked_image);
+            checkbox.setPreserveRatio(true);
+            checkbox.setFitWidth(18);
             Button new_item_button = new Button();
             new_item_button.getStyleClass().add("container_sub_child");
+            new_item_button.setGraphic(checkbox);
             new_item_button.setOnAction((ActionEvent ae) -> {
                 toggleItemStatus(new_item_button);
             });
@@ -273,16 +287,7 @@ public class SpecificListController implements Initializable {
                     toggleListStatus();
                 }});
             new_hbox.getChildren().add(new_item);
-
-            // list_container.setOnMouseEntered((MouseEvent me) -> { // TO-DO: Update to resize textbox on focus
-            //     System.out.println("Resizing New Item TextField");
-
-            //     new_item.setPrefWidth(new_hbox.getWidth());
-
-            //     // reset the mouse entered event
-            //     list_container.setOnMouseEntered((MouseEvent sme) -> {});
-            // });
-
+            new_item.setPrefWidth(list_container.getWidth());
             new_item.requestFocus();
             new_item.selectAll();
         });
@@ -443,14 +448,21 @@ public class SpecificListController implements Initializable {
 
     private void toggleItemStatus(Button item_button) {
         boolean check;
+        ImageView checkbox = new ImageView();
+        checkbox.setPreserveRatio(true);
+        checkbox.setFitWidth(18);
 
         if(item_button.getStyleClass().contains("checked_item")) {
             item_button.getStyleClass().remove("checked_item");
             check = false;
+            checkbox.setImage(unchecked_image);
+            item_button.setGraphic(checkbox);
         }
         else {
             item_button.getStyleClass().add("checked_item");
             check = true;
+            checkbox.setImage(checked_image);
+            item_button.setGraphic(checkbox);
         }
 
         Node parent = item_button.getParent();
@@ -616,14 +628,20 @@ public class SpecificListController implements Initializable {
                 ListItem item = list_items.get(i);
                 ArrayList<Node> new_nodes = new ArrayList<>();
 
+                ImageView checkbox = new ImageView(unchecked_image);
+                checkbox.setPreserveRatio(true);
+                checkbox.setFitWidth(18);
                 Button item_button = new Button(item.getName());
                 item_button.getStyleClass().add("container_sub_child");
+                item_button.setGraphic(checkbox);
+                item_button.setGraphicTextGap(6);
                 item_button.setOnAction((ActionEvent e) -> {
                     toggleItemStatus(item_button);
                 });
 
                 if(item.getStatus()) {
                     item_button.getStyleClass().add("checked_item");
+                    checkbox.setImage(checked_image);
                 }
                 
                 new_nodes.add(item_button);
@@ -719,9 +737,13 @@ public class SpecificListController implements Initializable {
                 
                 if(item_button.getStyleClass().contains("checked_item") && !item.getStatus()) {
                     item_button.getStyleClass().remove("checked_item");
+                    ImageView checkbox = (ImageView)item_button.getGraphic();
+                    checkbox.setImage(unchecked_image);
                 }
                 else if (!item_button.getStyleClass().contains("checked_item") && item.getStatus()) {
                     item_button.getStyleClass().add("checked_item");
+                    ImageView checkbox = (ImageView)item_button.getGraphic();
+                    checkbox.setImage(checked_image);
                 }
             }
         }
