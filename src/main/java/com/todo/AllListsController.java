@@ -108,7 +108,7 @@ public class AllListsController implements Initializable{
         new_list_trigger.getStyleClass().add("container_sub_child");
         // new_list_trigger.setStyle("-fx-border-width:0px;");
 
-        Image settings = new Image(App.class.getResource("images/whiteGears.png").toExternalForm());
+        Image settings = new Image(App.class.getResource("images/White-Gears.png").toExternalForm());
         ImageView iv1 = new ImageView();
         iv1.setImage(settings);
         iv1.setPreserveRatio(true);

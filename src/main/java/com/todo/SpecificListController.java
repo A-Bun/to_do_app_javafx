@@ -26,7 +26,11 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -329,6 +333,46 @@ public class SpecificListController implements Initializable {
 
             Button item = (Button)child_list_hbox.getChildren().get(0);
 
+            Image reorder_image = new Image(App.class.getResource("images/Reorder-Icon.png").toExternalForm());
+            ImageView reorder_iv = new ImageView(reorder_image);
+            reorder_iv.setPreserveRatio(true);
+            reorder_iv.setFitHeight(18);
+
+            Button reorder_button = new Button("", reorder_iv);
+            reorder_button.getStyleClass().add("container_sub_child");
+            reorder_button.setPadding(new Insets(2));
+            reorder_button.setGraphicTextGap(0);
+            
+            reorder_button.setOnDragDetected((MouseEvent me) -> {
+                System.out.println("Dragging...");
+                Dragboard dragboard = child_list_hbox.startDragAndDrop(TransferMode.MOVE);
+                ClipboardContent content = new ClipboardContent();
+                content.putString("pre-move index: " + list_container.getChildren().indexOf(child_list_hbox));
+                dragboard.setContent(content);
+                me.consume();
+            });
+
+            list_container.setOnDragOver((DragEvent de) -> { //TO-DO: figure out how to get the drag to complete correctly; maybe do full drag?
+                Dragboard dragboard = de.getDragboard();
+                if(dragboard.hasString()) {
+                    de.acceptTransferModes(TransferMode.MOVE);
+                }
+                de.consume();
+            });
+
+            reorder_button.setOnDragDropped((DragEvent de) -> {
+                System.out.println("Dragging terminated...");
+                Dragboard dragboard = de.getDragboard();
+                if(dragboard.hasString()) {
+                    System.out.println(dragboard.getString());
+                }
+
+                de.setDropCompleted(true);
+
+                reorderList();
+                de.consume();
+            });
+
             Button delete_button = new Button();
             delete_button.setText("X");
             delete_button.getStyleClass().add("delete_button");
@@ -359,6 +403,7 @@ public class SpecificListController implements Initializable {
                 }
             });
             child_list_hbox.getChildren().add(0, delete_button);
+            child_list_hbox.getChildren().add(reorder_button);
 
             item.setContextMenu(addNewMenuItem(new ContextMenu(), "Rename", (ActionEvent e) -> {
                     specific_list_edit.setDisable(true);
@@ -373,7 +418,7 @@ public class SpecificListController implements Initializable {
                             boolean updated = updateListItem(item_id, item.getText(), trimmed_name);
                             item.setText(trimmed_name);
                             child_list_hbox.getChildren().remove(rename_item);
-                            child_list_hbox.getChildren().add(item);
+                            child_list_hbox.getChildren().addAll(item, reorder_button);
                             
                             if(updated)
                             {
@@ -385,8 +430,8 @@ public class SpecificListController implements Initializable {
                                 enableUndoRedo();
                             }
                         }});
-                    child_list_hbox.getChildren().remove(item);
-                    child_list_hbox.getChildren().add(rename_item);
+                    child_list_hbox.getChildren().removeAll(item, reorder_button);
+                    child_list_hbox.getChildren().addAll(rename_item);
                     rename_item.setPrefWidth(child_list_hbox.getWidth());
 
                     rename_item.requestFocus();
@@ -415,6 +460,7 @@ public class SpecificListController implements Initializable {
         for (int i = 0; i < list_container.getChildren().size(); i++) {
             HBox child_list_hbox = (HBox)list_container.getChildren().get(i);
             child_list_hbox.getChildren().remove(0);
+            child_list_hbox.getChildren().remove(child_list_hbox.getChildren().size()-1);
 
             Button item = (Button)child_list_hbox.getChildren().get(0);
 
@@ -573,6 +619,27 @@ public class SpecificListController implements Initializable {
         System.out.println("Updated status of list item \"" + item_name + "\"");
 
         return result;
+    }
+
+    @SuppressWarnings("unused")
+    private boolean reorderListItem(String item_id, String item_name, int new_placement_index) {
+        boolean result = false;
+        ListItem item_to_reorder = getListItem(item_id, item_name);
+
+        // remove the item from the list items list
+        list_items.remove(item_to_reorder);
+
+        // add the item back into the list items list at the new placement index
+        list_items.add(new_placement_index, item_to_reorder);
+
+        System.out.println("Reordered list_items ArrayList.");
+
+        return true;
+    }
+
+    @SuppressWarnings("unused")
+    private void reorderList() {
+        System.out.println("Reordering list...");
     }
 
     private void updateStack() {
