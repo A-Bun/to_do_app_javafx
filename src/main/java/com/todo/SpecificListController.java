@@ -26,7 +26,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
@@ -634,16 +633,42 @@ public class SpecificListController implements Initializable {
         reorder_button.setPadding(new Insets(2));
         reorder_button.setGraphicTextGap(0);
         
-        reorder_button.setOnDragDetected((MouseEvent me) -> {
-            System.out.println("Dragging...");
-            Dragboard dragboard = ro_hbox.startDragAndDrop(TransferMode.MOVE);
-            ClipboardContent content = new ClipboardContent();
-            ro_hbox.getStyleClass().add("drag_highlighted");
-            ro_button.getStyleClass().add("drag_highlighted");
-            reorder_button.getStyleClass().add("drag_highlighted");
-            content.putString("" + list_container.getChildren().indexOf(ro_hbox));
-            dragboard.setContent(content);
-            me.consume();
+        // reorder_button.setOnDragDetected((MouseEvent me) -> {
+        //     System.out.println("Dragging...");
+        //     Dragboard dragboard = ro_hbox.startDragAndDrop(TransferMode.MOVE);
+        //     ClipboardContent content = new ClipboardContent();
+        //     ro_hbox.getStyleClass().add("drag_highlighted");
+        //     ro_button.getStyleClass().add("drag_highlighted");
+        //     reorder_button.getStyleClass().add("drag_highlighted");
+        //     content.putString("" + list_container.getChildren().indexOf(ro_hbox));
+        //     dragboard.setContent(content);
+        // });
+
+
+        /* NOTES:
+         *    MouseEvent:
+         *      - getX() and getY() are the coordinates of the mouse in relation to the top-left corner (0,0) of the object you are dragging (will be negative when moving left/up); when dragging to the X extremes within the window, adding the absolute values together equals the window's width (800); the same goes for the Y extremes of the window (600)
+         *      - getScreenX() and getScreenY() are the coordinates of the mouse in relation to the top-left corner (0,0) of your left-most monitor/computer screen (will never be negative); when dragging to the X extremes within the window, subtracting the smaller value from the larger value equals the window's width (800); the same goes for the Y extremes of the window (600)
+         *    Node:
+         *      - getLayoutX() and getLayoutY() are the coordinates of the translation added to this object's transform for the purpose of layout
+         *      - getTranslateX() and getTranslateY() are the coordinates of the translation added to this object's transform
+         */
+        // double orig_data = 0;
+        // reorder_button.setOnMousePressed((MouseEvent sme) -> {
+        //     // System.err.println("X: " + reorder_button.getLayoutX() + "; Y: " + reorder_button.getLayoutY());
+        //     // System.err.println("Mouse X: " + (sme.getX() + reorder_button.getWidth()/2) + "; Mouse Y: " + (sme.getY() + reorder_button.getHeight()/2));
+        //     reorder_button.setLayoutY(sme.getSceneY());
+        //     System.out.println("layout y: " + reorder_button.getLayoutY());
+        //     System.out.println("scene y: " + sme.getSceneY());
+        //     System.out.println("screen y: " + sme.getScreenY());
+        // }); // https://stackoverflow.com/questions/22139615/dragging-buttons-in-javafx
+        reorder_button.setOnMouseDragged((MouseEvent sme) -> {
+            // System.err.println("X: " + reorder_button.getLayoutX() + "; Y: " + reorder_button.getLayoutY());
+            // System.err.println("Mouse X: " + (sme.getX() + reorder_button.getWidth()/2) + "; Mouse Y: " + (sme.getY() + reorder_button.getHeight()/2));
+            reorder_button.setLayoutY(sme.getSceneY() + reorder_button.getLayoutY());
+            System.out.println("layout y: " + reorder_button.getLayoutY());
+            System.out.println("scene y: " + sme.getSceneY());
+            System.out.println("screen y: " + sme.getScreenY());
         });
 
         ro_hbox.setOnDragOver((DragEvent de) -> { 
@@ -669,7 +694,7 @@ public class SpecificListController implements Initializable {
             }
 
             if(de.getGestureSource() != ro_hbox) {
-                System.out.println("Drag entered possible drop zone...");
+                // System.out.println("Drag entered possible drop zone...");
                 ro_hbox.getStyleClass().add("drop_highlighted");
                 ro_button.getStyleClass().add("drop_highlighted");
                 reorder_button.getStyleClass().add("drop_highlighted");
@@ -679,7 +704,7 @@ public class SpecificListController implements Initializable {
 
         ro_hbox.setOnDragExited((DragEvent de) -> {
             if(de.getGestureSource() != ro_hbox) {
-                System.out.println("Drag exited possible drop zone...");
+                // System.out.println("Drag exited possible drop zone...");
                 ro_hbox.getStyleClass().remove("drop_highlighted");
                 ro_button.getStyleClass().remove("drop_highlighted");
                 reorder_button.getStyleClass().remove("drop_highlighted");
@@ -692,15 +717,15 @@ public class SpecificListController implements Initializable {
             Dragboard dragboard = de.getDragboard();
 
             if(dragboard.hasString()) {
-                System.out.println("old_index: " + dragboard.getString());
-                System.out.println(de.getGestureTarget());
+                // System.out.println("old_index: " + dragboard.getString());
+                // System.out.println(de.getGestureTarget());
                 int orig_idx = Integer.parseInt(dragboard.getString());
                 int new_idx = orig_idx;
 
                 if(de.getGestureTarget().getClass().getSimpleName().equals("HBox")) {
                     new_idx = list_container.getChildren().indexOf(de.getGestureTarget());
                 }
-                System.out.println("new_index: " + new_idx);
+                // System.out.println("new_index: " + new_idx);
                 
                 HBox moved_hbox = (HBox)list_container.getChildren().get(orig_idx);
                 moved_hbox.getStyleClass().remove("drag_highlighted");
