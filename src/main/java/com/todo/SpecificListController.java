@@ -197,6 +197,11 @@ public class SpecificListController implements Initializable {
             new_item_button.setOnAction((ActionEvent ae) -> {
                 toggleItemStatus(new_item_button);
             });
+                        
+            ArrayList<Node> new_nodes = new ArrayList<>();
+            HBox new_hbox = createContainerChild(new_nodes, 1);
+
+            Button reorder_button = reorderLogic(new_hbox, new_item_button);
 
             new_item_button.setContextMenu(addNewMenuItem(new ContextMenu(), "Rename", (ActionEvent ae) -> {
                 specific_list_edit.setDisable(true);
@@ -207,13 +212,13 @@ public class SpecificListController implements Initializable {
                 rename_item.setOnAction((ActionEvent sae) -> {
                     String trimmed_name = rename_item.getText().trim();
                     if(!trimmed_name.isBlank()) {
-                        new_item_button.setText(trimmed_name);
                         HBox child_hbox = (HBox)rename_item.getParent();
                         String item_id = list_items.get(list_container.getChildren().indexOf(child_hbox)).getId();
                         boolean updated = updateListItem(item_id, new_item_button.getText(), trimmed_name);
+                        new_item_button.setText(trimmed_name);
                         child_hbox.getChildren().indexOf(rename_item);
                         child_hbox.getChildren().remove(rename_item);
-                        child_hbox.getChildren().add(new_item_button);
+                        child_hbox.getChildren().addAll(new_item_button, reorder_button);
                         
                         if(updated)
                         {
@@ -226,7 +231,7 @@ public class SpecificListController implements Initializable {
                         }
                     }});
                 HBox child_hbox = (HBox)new_item_button.getParent();
-                child_hbox.getChildren().remove(new_item_button);
+                child_hbox.getChildren().removeAll(new_item_button, reorder_button);
                 child_hbox.getChildren().add(rename_item);
                 rename_item.setPrefWidth(child_hbox.getWidth());
 
@@ -266,10 +271,7 @@ public class SpecificListController implements Initializable {
                 }
             });
 
-            ArrayList<Node> new_nodes = new ArrayList<>();
-            new_nodes.add(delete_button);
-
-            HBox new_hbox = createContainerChild(new_nodes, 1);
+            new_hbox.getChildren().add(0, delete_button);
             
             TextField new_item = new TextField();
             new_item.getStyleClass().add("container_sub_child_tf");
@@ -280,7 +282,7 @@ public class SpecificListController implements Initializable {
                     HBox parent_hbox = (HBox)new_item.getParent();
                     new_item_button.setPrefWidth(parent_hbox.getWidth());
                     parent_hbox.getChildren().remove(new_item);
-                    parent_hbox.getChildren().add(new_item_button);
+                    parent_hbox.getChildren().addAll(new_item_button, reorder_button);
                     if(!stillRenaming()) {
                         specific_list_edit.setDisable(false);
                         add_item_button.setDisable(false);
@@ -333,45 +335,7 @@ public class SpecificListController implements Initializable {
 
             Button item = (Button)child_list_hbox.getChildren().get(0);
 
-            Image reorder_image = new Image(App.class.getResource("images/Reorder-Icon.png").toExternalForm());
-            ImageView reorder_iv = new ImageView(reorder_image);
-            reorder_iv.setPreserveRatio(true);
-            reorder_iv.setFitHeight(18);
-
-            Button reorder_button = new Button("", reorder_iv);
-            reorder_button.getStyleClass().add("container_sub_child");
-            reorder_button.setPadding(new Insets(2));
-            reorder_button.setGraphicTextGap(0);
-            
-            reorder_button.setOnDragDetected((MouseEvent me) -> {
-                System.out.println("Dragging...");
-                Dragboard dragboard = child_list_hbox.startDragAndDrop(TransferMode.MOVE);
-                ClipboardContent content = new ClipboardContent();
-                content.putString("pre-move index: " + list_container.getChildren().indexOf(child_list_hbox));
-                dragboard.setContent(content);
-                me.consume();
-            });
-
-            list_container.setOnDragOver((DragEvent de) -> { //TO-DO: figure out how to get the drag to complete correctly; maybe do full drag?
-                Dragboard dragboard = de.getDragboard();
-                if(dragboard.hasString()) {
-                    de.acceptTransferModes(TransferMode.MOVE);
-                }
-                de.consume();
-            });
-
-            reorder_button.setOnDragDropped((DragEvent de) -> {
-                System.out.println("Dragging terminated...");
-                Dragboard dragboard = de.getDragboard();
-                if(dragboard.hasString()) {
-                    System.out.println(dragboard.getString());
-                }
-
-                de.setDropCompleted(true);
-
-                reorderList();
-                de.consume();
-            });
+            Button reorder_button = reorderLogic(child_list_hbox, item);
 
             Button delete_button = new Button();
             delete_button.setText("X");
@@ -638,8 +602,123 @@ public class SpecificListController implements Initializable {
     }
 
     @SuppressWarnings("unused")
-    private void reorderList() {
+    private void reorderList(HBox item_to_reorder, int old_index, int new_index) {
+        if(old_index == new_index) {
+            System.out.println("Reorder indexes match; Cancelling reorder...");
+            return;
+        }
+        ListItem item = list_items.get(old_index);
+
         System.out.println("Reordering list...");
+        list_container.getChildren().remove(old_index);
+
+        list_container.getChildren().add(new_index, item_to_reorder);
+
+        reorderListItem(item.getId(), item.getName(), new_index);
+        
+        updateStack();
+
+        // for (ListItem listItem : list_items) {
+        //     System.out.println(listItem.getName());
+        // }
+    }
+
+    private Button reorderLogic(HBox ro_hbox, Button ro_button) {
+        Image reorder_image = new Image(App.class.getResource("images/Reorder-Icon.png").toExternalForm());
+        ImageView reorder_iv = new ImageView(reorder_image);
+        reorder_iv.setPreserveRatio(true);
+        reorder_iv.setFitHeight(18);
+
+        Button reorder_button = new Button("", reorder_iv);
+        reorder_button.getStyleClass().add("container_sub_child");
+        reorder_button.setPadding(new Insets(2));
+        reorder_button.setGraphicTextGap(0);
+        
+        reorder_button.setOnDragDetected((MouseEvent me) -> {
+            System.out.println("Dragging...");
+            Dragboard dragboard = ro_hbox.startDragAndDrop(TransferMode.MOVE);
+            ClipboardContent content = new ClipboardContent();
+            ro_hbox.getStyleClass().add("drag_highlighted");
+            ro_button.getStyleClass().add("drag_highlighted");
+            reorder_button.getStyleClass().add("drag_highlighted");
+            content.putString("" + list_container.getChildren().indexOf(ro_hbox));
+            dragboard.setContent(content);
+            me.consume();
+        });
+
+        ro_hbox.setOnDragOver((DragEvent de) -> { 
+            Dragboard dragboard = de.getDragboard();
+            if(dragboard.hasString()) {
+                de.acceptTransferModes(TransferMode.MOVE);
+            }
+            de.consume();
+        });
+
+        list_container.setOnDragOver((DragEvent de) -> { 
+            Dragboard dragboard = de.getDragboard();
+            if(dragboard.hasString()) {
+                de.acceptTransferModes(TransferMode.MOVE);
+            }
+            de.consume();
+        });
+
+        ro_hbox.setOnDragEntered((DragEvent de) -> {
+            Dragboard dragboard = de.getDragboard();
+            if(dragboard.hasString()) {
+                de.acceptTransferModes(TransferMode.MOVE);
+            }
+
+            if(de.getGestureSource() != ro_hbox) {
+                System.out.println("Drag entered possible drop zone...");
+                ro_hbox.getStyleClass().add("drop_highlighted");
+                ro_button.getStyleClass().add("drop_highlighted");
+                reorder_button.getStyleClass().add("drop_highlighted");
+            }
+            de.consume();
+        });
+
+        ro_hbox.setOnDragExited((DragEvent de) -> {
+            if(de.getGestureSource() != ro_hbox) {
+                System.out.println("Drag exited possible drop zone...");
+                ro_hbox.getStyleClass().remove("drop_highlighted");
+                ro_button.getStyleClass().remove("drop_highlighted");
+                reorder_button.getStyleClass().remove("drop_highlighted");
+            }
+            de.consume();
+        });
+
+        list_container.setOnDragDropped((DragEvent de) -> {
+            System.out.println("Dragging terminated...");
+            Dragboard dragboard = de.getDragboard();
+
+            if(dragboard.hasString()) {
+                System.out.println("old_index: " + dragboard.getString());
+                System.out.println(de.getGestureTarget());
+                int orig_idx = Integer.parseInt(dragboard.getString());
+                int new_idx = orig_idx;
+
+                if(de.getGestureTarget().getClass().getSimpleName().equals("HBox")) {
+                    new_idx = list_container.getChildren().indexOf(de.getGestureTarget());
+                }
+                System.out.println("new_index: " + new_idx);
+                
+                HBox moved_hbox = (HBox)list_container.getChildren().get(orig_idx);
+                moved_hbox.getStyleClass().remove("drag_highlighted");
+                moved_hbox.getChildren().get(1).getStyleClass().remove("drag_highlighted");
+                moved_hbox.getChildren().get(2).getStyleClass().remove("drag_highlighted");
+                de.setDropCompleted(true);
+                reorderList(moved_hbox, orig_idx, new_idx);
+            }
+            else {
+                System.out.println("Nothing to drop");
+                de.setDropCompleted(false);
+            }
+
+            de.consume();
+        });
+
+
+        return reorder_button;
     }
 
     private void updateStack() {
@@ -714,6 +793,10 @@ public class SpecificListController implements Initializable {
                 new_nodes.add(item_button);
 
                 if(editing) {
+                    HBox new_hbox = createContainerChild(new_nodes, 1);
+                    
+                    Button reorder_button = reorderLogic(new_hbox, item_button);
+                    
                     item_button.setContextMenu(addNewMenuItem(new ContextMenu(), "Rename", (ActionEvent ae) -> {
                         specific_list_edit.setDisable(true);
                         undo_button.setDisable(true);
@@ -728,7 +811,7 @@ public class SpecificListController implements Initializable {
                                 ListItem item_to_rename = list_items.get(list_container.getChildren().indexOf(child_hbox));
                                 boolean updated = updateListItem(item_to_rename.getId(), item_to_rename.getName(), trimmed_name);
                                 child_hbox.getChildren().remove(rename_item);
-                                child_hbox.getChildren().add(item_button);
+                                child_hbox.getChildren().addAll(item_button, reorder_button);
                                 
                                 if(updated)
                                 {
@@ -741,7 +824,7 @@ public class SpecificListController implements Initializable {
                                 }
                             }});
                         HBox child_hbox = (HBox)item_button.getParent();
-                        child_hbox.getChildren().remove(item_button);
+                        child_hbox.getChildren().removeAll(item_button, reorder_button);
                         child_hbox.getChildren().add(rename_item);
                         rename_item.setPrefWidth(child_hbox.getWidth());
                         rename_item.requestFocus();
@@ -778,8 +861,8 @@ public class SpecificListController implements Initializable {
                         }
                     });
 
-                    new_nodes.add(0, delete_button);
-                    createContainerChild(new_nodes, 1);
+                    new_hbox.getChildren().add(0, delete_button);
+                    new_hbox.getChildren().add(reorder_button);
                 }
                 else {
                     createContainerChild(new_nodes, 0);

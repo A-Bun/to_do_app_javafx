@@ -91,6 +91,16 @@ ScrollPane > .scroll-bar .thumb {
     text-align: left;
 }
 
+.drag_highlighted {
+    -fx-background-color: rgb(13, 13, 93);
+    background-color: rgb(13, 13, 93);
+}
+
+.drop_highlighted {
+    -fx-background-color: rgb(93, 13, 13);
+    background-color: rgb(93, 13, 13);
+}
+
 #all_lists_header {
     -fx-padding: 5px;
     -fx-border-width: 0px 0px 1px 0px;
