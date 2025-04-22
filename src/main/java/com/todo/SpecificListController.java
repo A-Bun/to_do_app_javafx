@@ -624,28 +624,18 @@ public class SpecificListController implements Initializable {
     }
 
     private Button reorderLogic(HBox ro_hbox, Button ro_button) {
-        Image reorder_image = new Image(App.class.getResource("images/Reorder-Icon.png").toExternalForm());
+        Image reorder_image = new Image(App.class.getResource("images/Reorder-Icon.png").toExternalForm(), 0, 18, true, false);
         ImageView reorder_iv = new ImageView(reorder_image);
-        reorder_iv.setPreserveRatio(true);
-        reorder_iv.setFitHeight(18);
+        // reorder_iv.setPreserveRatio(true);
+        // reorder_iv.setFitHeight(18);
 
         Button reorder_button = new Button("", reorder_iv);
         reorder_button.getStyleClass().add("container_sub_child");
         reorder_button.setPadding(new Insets(2));
         reorder_button.setGraphicTextGap(0);
-
-        final double[] orig_data = new double[2];
-        reorder_button.setOnMousePressed((MouseEvent me) -> {
-            // System.err.println("X: " + reorder_button.getLayoutX() + "; Y: " + reorder_button.getLayoutY());
-            // System.err.println("Mouse X: " + (sme.getX() + reorder_button.getWidth()/2) + "; Mouse Y: " + (sme.getY() + reorder_button.getHeight()/2));
-            orig_data[0] = reorder_button.getLayoutY();
-            orig_data[1] = reorder_button.getLayoutY() - me.getSceneY();
-            me.setDragDetect(true);
-        }); 
         
-        reorder_button.setOnDragDetected((MouseEvent me) -> {
+        reorder_button.setOnDragDetected((MouseEvent me) -> { // TO-DO: Figure out how to get ScrollPane to scroll while dragging button
             System.out.println("Drag detected...");
-            reorder_button.startFullDrag();
             Dragboard dragboard = ro_hbox.startDragAndDrop(TransferMode.MOVE);
             ClipboardContent content = new ClipboardContent();
             ro_hbox.getStyleClass().add("drag_highlighted");
@@ -653,33 +643,8 @@ public class SpecificListController implements Initializable {
             reorder_button.getStyleClass().add("drag_highlighted");
             content.putString("" + list_container.getChildren().indexOf(ro_hbox));
             dragboard.setContent(content);
+            dragboard.setDragView(reorder_image, -15, -15);
         });
-
-        reorder_button.setOnMouseDragged((MouseEvent me) -> { // TO-DO: Figure out how to get the button to move with the mouse AND do the enter/exit highlights
-            // System.out.println("Dragging...");
-            reorder_button.setLayoutY(0);
-            reorder_button.setTranslateY(me.getSceneY() + orig_data[1]);
-        });
-
-
-        /* NOTES:
-         *    MouseEvent:
-         *      - getX() and getY() are the coordinates of the mouse in relation to the top-left corner (0,0) of the object you are dragging (will be negative when moving left/up); when dragging to the X extremes within the window, adding the absolute values together equals the window's width (800); the same goes for the Y extremes of the window (600)
-         *      - getScreenX() and getScreenY() are the coordinates of the mouse in relation to the top-left corner (0,0) of your left-most monitor/computer screen (will never be negative); when dragging to the X extremes within the window, subtracting the smaller value from the larger value equals the window's width (800); the same goes for the Y extremes of the window (600)
-         *    Node:
-         *      - getLayoutX() and getLayoutY() are the coordinates of the translation added to this object's transform for the purpose of layout
-         *      - getTranslateX() and getTranslateY() are the coordinates of the translation added to this object's transform
-         */
-        // https://stackoverflow.com/questions/22139615/dragging-buttons-in-javafx
-        // reorder_button.setOnMouseDragged((MouseEvent sme) -> {
-        //     // System.err.println("X: " + reorder_button.getLayoutX() + "; Y: " + reorder_button.getLayoutY());
-        //     // System.err.println("Mouse X: " + (sme.getX() + reorder_button.getWidth()/2) + "; Mouse Y: " + (sme.getY() + reorder_button.getHeight()/2));
-        //     reorder_button.setLayoutY(0);
-        //     reorder_button.setTranslateY(sme.getSceneY() + orig_data[0]);
-        //     // System.out.println("layout y: " + reorder_button.getLayoutY());
-        //     System.out.println("translate y: " + reorder_button.getTranslateY());
-        //     System.out.println("scene y: " + sme.getSceneY());
-        // });
 
         ro_hbox.setOnDragOver((DragEvent de) -> { 
             Dragboard dragboard = de.getDragboard();
@@ -697,17 +662,6 @@ public class SpecificListController implements Initializable {
             de.consume();
         });
 
-        // ro_hbox.setOnMouseDragEntered((MouseDragEvent mde) -> {
-        //     System.out.println(mde.getGestureSource());
-        //     if(mde.getGestureSource() != ro_hbox) {
-        //         System.out.println("Drag entered possible drop zone...");
-        //         ro_hbox.getStyleClass().add("drop_highlighted");
-        //         ro_button.getStyleClass().add("drop_highlighted");
-        //         reorder_button.getStyleClass().add("drop_highlighted");
-        //     }            
-        //     mde.consume();
-        // });
-
         ro_hbox.setOnDragEntered((DragEvent de) -> {
             Dragboard dragboard = de.getDragboard();
             if(dragboard.hasString()) {
@@ -723,16 +677,6 @@ public class SpecificListController implements Initializable {
             de.consume();
         });
 
-        // ro_hbox.setOnMouseDragExited((MouseDragEvent mde) -> {
-        //     if(mde.getGestureSource() != ro_hbox) {
-        //         System.out.println("Drag exited possible drop zone...");
-        //         ro_hbox.getStyleClass().remove("drop_highlighted");
-        //         ro_button.getStyleClass().remove("drop_highlighted");
-        //         reorder_button.getStyleClass().remove("drop_highlighted");
-        //     }
-        //     mde.consume();
-        // });
-
         ro_hbox.setOnDragExited((DragEvent de) -> {
             if(de.getGestureSource() != ro_hbox) {
                 // System.out.println("Drag exited possible drop zone...");
@@ -743,48 +687,8 @@ public class SpecificListController implements Initializable {
             de.consume();
         });
 
-        // ro_hbox.setOnMouseDragReleased((MouseDragEvent mde) -> {
-        //     System.out.println("Dragging terminated...");
-        //     reorder_button.setMouseTransparent(false);
-        //     ro_button.setMouseTransparent(false);
-        //     reorder_button.setLayoutY(0);
-        //     reorder_button.setTranslateY(0);
-
-        //     if(mde.getGestureSource() != ro_hbox) {
-        //         System.out.println("old_index: " + orig_idx[0]);
-        //         // System.out.println(de.getGestureTarget());
-        //         int new_idx = orig_idx[0];
-
-        //         if(mde.getGestureSource().getClass().getSimpleName().equals("HBox")) {
-        //             new_idx = list_container.getChildren().indexOf(mde.getGestureSource());
-        //         }
-        //         System.out.println("new_index: " + new_idx);
-                
-        //         // HBox moved_hbox = (HBox)list_container.getChildren().get(orig_idx);
-        //         // moved_hbox.getStyleClass().remove("drag_highlighted");
-        //         // moved_hbox.getChildren().get(1).getStyleClass().remove("drag_highlighted");
-        //         // moved_hbox.getChildren().get(2).getStyleClass().remove("drag_highlighted");
-        //         // de.setDropCompleted(true);
-        //         // reorderList(moved_hbox, orig_idx, new_idx);
-        //     }
-        //     else {
-        //         System.out.println("Nothing to drop");
-        //     }
-
-        //     mde.consume();
-        // });
-
-        // list_container.setOnMouseDragReleased((MouseDragEvent mde) -> {
-        //     reorder_button.setMouseTransparent(false);
-        //     ro_button.setMouseTransparent(false);
-        //     reorder_button.setLayoutY(0);
-        //     reorder_button.setTranslateY(0);
-        // });
-
         list_container.setOnDragDropped((DragEvent de) -> {
             System.out.println("Dragging terminated...");
-            reorder_button.setLayoutY(orig_data[0]);
-            reorder_button.setTranslateY(0);
             Dragboard dragboard = de.getDragboard();
 
             if(dragboard.hasString()) {
