@@ -29,6 +29,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
@@ -139,6 +140,13 @@ public class SpecificListController implements Initializable {
             });
         }
 
+        border_pane.setOnMouseClicked((MouseEvent me) -> {
+            if(me.getButton() == MouseButton.BACK) {
+                System.out.println("Exiting List via Mouse Back Button");
+                exitDialog();
+            }
+            me.consume();
+        });
     }
 
     private void switchToAllListsView() throws IOException {
@@ -634,86 +642,117 @@ public class SpecificListController implements Initializable {
         reorder_button.setPadding(new Insets(2));
         reorder_button.setGraphicTextGap(0);
         
-        reorder_button.setOnDragDetected((MouseEvent me) -> { // TO-DO: Figure out how to get ScrollPane to scroll while dragging button
-            System.out.println("Drag detected...");
-            Dragboard dragboard = ro_hbox.startDragAndDrop(TransferMode.MOVE);
-            ClipboardContent content = new ClipboardContent();
-            ro_hbox.getStyleClass().add("drag_highlighted");
-            ro_button.getStyleClass().add("drag_highlighted");
-            reorder_button.getStyleClass().add("drag_highlighted");
-            content.putString("" + list_container.getChildren().indexOf(ro_hbox));
-            dragboard.setContent(content);
-            dragboard.setDragView(reorder_image, -15, -15);
+        reorder_button.setOnDragDetected((MouseEvent me) -> {
+            if(!stillRenaming()) {
+                System.out.println("Drag detected...");
+                Dragboard dragboard = ro_hbox.startDragAndDrop(TransferMode.MOVE);
+                ClipboardContent content = new ClipboardContent();
+                ro_hbox.getStyleClass().add("drag_highlighted");
+                ro_button.getStyleClass().add("drag_highlighted");
+                reorder_button.getStyleClass().add("drag_highlighted");
+                content.putString("" + list_container.getChildren().indexOf(ro_hbox));
+                dragboard.setContent(content);
+                dragboard.setDragView(reorder_image, -15, -15);
+            }
+            me.consume();
         });
 
         ro_hbox.setOnDragOver((DragEvent de) -> { 
-            Dragboard dragboard = de.getDragboard();
-            if(dragboard.hasString()) {
-                de.acceptTransferModes(TransferMode.MOVE);
+            if(!stillRenaming()) {
+                Dragboard dragboard = de.getDragboard();
+                if(dragboard.hasString()) {
+                    de.acceptTransferModes(TransferMode.MOVE);
+                }
+
+                if(de.getSceneY() > 460 && center_content.getVvalue() < center_content.getVmax()) {
+                    center_content.setVvalue(center_content.getVvalue() + 0.01);
+                    // System.out.println("New scroll position: " + center_content.getVvalue());
+                }
+                else if(de.getSceneY() < 160 && center_content.getVvalue() > center_content.getVmin()) {
+                    center_content.setVvalue(center_content.getVvalue() - 0.01);
+                    // System.out.println("New scroll position: " + center_content.getVvalue());
+                }
             }
             de.consume();
         });
 
         list_container.setOnDragOver((DragEvent de) -> { 
-            Dragboard dragboard = de.getDragboard();
-            if(dragboard.hasString()) {
-                de.acceptTransferModes(TransferMode.MOVE);
+            if(!stillRenaming()) {
+                Dragboard dragboard = de.getDragboard();
+                if(dragboard.hasString()) {
+                    de.acceptTransferModes(TransferMode.MOVE);
+                }
+                
+                if(de.getSceneY() > 460 && center_content.getVvalue() < center_content.getVmax()) {
+                    center_content.setVvalue(center_content.getVvalue() + 0.01);
+                    // System.out.println("New scroll position: " + center_content.getVvalue());
+                }
+                else if(de.getSceneY() < 160 && center_content.getVvalue() > center_content.getVmin()) {
+                    center_content.setVvalue(center_content.getVvalue() - 0.01);
+                    // System.out.println("New scroll position: " + center_content.getVvalue());
+                }
             }
             de.consume();
         });
 
         ro_hbox.setOnDragEntered((DragEvent de) -> {
-            Dragboard dragboard = de.getDragboard();
-            if(dragboard.hasString()) {
-                de.acceptTransferModes(TransferMode.MOVE);
-            }
+            if(!stillRenaming()) {
+                Dragboard dragboard = de.getDragboard();
+                if(dragboard.hasString()) {
+                    de.acceptTransferModes(TransferMode.MOVE);
+                }
 
-            if(de.getGestureSource() != ro_hbox) {
-                // System.out.println("Drag entered possible drop zone...");
-                ro_hbox.getStyleClass().add("drop_highlighted");
-                ro_button.getStyleClass().add("drop_highlighted");
-                reorder_button.getStyleClass().add("drop_highlighted");
+                if(de.getGestureSource() != ro_hbox) {
+                    // System.out.println("Drag entered possible drop zone...");
+                    ro_hbox.getStyleClass().add("drop_highlighted");
+                    ro_button.getStyleClass().add("drop_highlighted");
+                    reorder_button.getStyleClass().add("drop_highlighted");
+                }
+                
             }
             de.consume();
         });
 
         ro_hbox.setOnDragExited((DragEvent de) -> {
-            if(de.getGestureSource() != ro_hbox) {
-                // System.out.println("Drag exited possible drop zone...");
-                ro_hbox.getStyleClass().remove("drop_highlighted");
-                ro_button.getStyleClass().remove("drop_highlighted");
-                reorder_button.getStyleClass().remove("drop_highlighted");
+            if(!stillRenaming()) {
+                if(de.getGestureSource() != ro_hbox) {
+                    // System.out.println("Drag exited possible drop zone...");
+                    ro_hbox.getStyleClass().remove("drop_highlighted");
+                    ro_button.getStyleClass().remove("drop_highlighted");
+                    reorder_button.getStyleClass().remove("drop_highlighted");
+                }
             }
             de.consume();
         });
 
         list_container.setOnDragDropped((DragEvent de) -> {
-            System.out.println("Dragging terminated...");
-            Dragboard dragboard = de.getDragboard();
+            if(!stillRenaming()) {
+                System.out.println("Dragging terminated...");
+                Dragboard dragboard = de.getDragboard();
 
-            if(dragboard.hasString()) {
-                // System.out.println("old_index: " + dragboard.getString());
-                // System.out.println(de.getGestureTarget());
-                int orig_idx = Integer.parseInt(dragboard.getString());
-                int new_idx = orig_idx;
+                if(dragboard.hasString()) {
+                    // System.out.println("old_index: " + dragboard.getString());
+                    // System.out.println(de.getGestureTarget());
+                    int orig_idx = Integer.parseInt(dragboard.getString());
+                    int new_idx = orig_idx;
 
-                if(de.getGestureTarget().getClass().getSimpleName().equals("HBox")) {
-                    new_idx = list_container.getChildren().indexOf(de.getGestureTarget());
+                    if(de.getGestureTarget().getClass().getSimpleName().equals("HBox")) {
+                        new_idx = list_container.getChildren().indexOf(de.getGestureTarget());
+                    }
+                    // System.out.println("new_index: " + new_idx);
+                    
+                    HBox moved_hbox = (HBox)list_container.getChildren().get(orig_idx);
+                    moved_hbox.getStyleClass().remove("drag_highlighted");
+                    moved_hbox.getChildren().get(1).getStyleClass().remove("drag_highlighted");
+                    moved_hbox.getChildren().get(2).getStyleClass().remove("drag_highlighted");
+                    de.setDropCompleted(true);
+                    reorderList(moved_hbox, orig_idx, new_idx);
                 }
-                // System.out.println("new_index: " + new_idx);
-                
-                HBox moved_hbox = (HBox)list_container.getChildren().get(orig_idx);
-                moved_hbox.getStyleClass().remove("drag_highlighted");
-                moved_hbox.getChildren().get(1).getStyleClass().remove("drag_highlighted");
-                moved_hbox.getChildren().get(2).getStyleClass().remove("drag_highlighted");
-                de.setDropCompleted(true);
-                reorderList(moved_hbox, orig_idx, new_idx);
+                else {
+                    System.out.println("Nothing to drop");
+                    de.setDropCompleted(false);
+                }
             }
-            else {
-                System.out.println("Nothing to drop");
-                de.setDropCompleted(false);
-            }
-
             de.consume();
         });
 
