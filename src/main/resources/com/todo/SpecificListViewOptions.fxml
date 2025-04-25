@@ -13,11 +13,26 @@
    <children>
       <HBox alignment="CENTER" spacing="20.0" fillHeight="true" HBox.hgrow="ALWAYS" styleClass="full_page">
          <children>
-            <Label fx:id="all_lists_label" text="This is a new scene!" styleClass="header_label" />
+         <ScrollPane fx:id="scroll_pane" HBox.hgrow="ALWAYS" minHeight="200" minWidth="200" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" styleClass="edge-to-edge"> <!-- This style class hides the extra border that scrollpanes gain when in focus -->
+               <content>
+                  <VBox fillWidth="true" alignment="TOP_LEFT" fx:id="list_container" styleClass="list_container">
+                     <children>
+                        <HBox fx:id="all_lists_header" spacing="20.0">
+                           <children>
+                              <Label fx:id="options_label" text="Options" styleClass="header_label" />
+                           </children>
+                        </HBox>
+                     </children>
+                     <padding>
+                        <Insets top="20.0" right="20.0" bottom="20.0" left="20.0" />
+                     </padding>
+                  </VBox>
+               </content>
+            </ScrollPane>
          </children>
       </HBox>
    </children>
    <padding>
-      <Insets top="20.0" right="20.0" bottom="20.0" left="20.0" />
-   </padding>
+        <Insets top="100.0" right="200.0" bottom="100.0" left="200.0" />
+    </padding>
 </HBox>

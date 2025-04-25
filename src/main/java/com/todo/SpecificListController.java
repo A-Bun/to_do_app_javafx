@@ -47,6 +47,7 @@ public class SpecificListController implements Initializable {
     @FXML private Label specific_list_label;
     @FXML private Button all_lists_button;
     @FXML private Button specific_list_edit;
+    @FXML private Button options_button;
     @FXML private Button undo_button;
     @FXML private Button redo_button;
     @FXML private Button save_button;
@@ -147,6 +148,8 @@ public class SpecificListController implements Initializable {
             }
             me.consume();
         });
+
+        initializeOptionsMenu();
     }
 
     private void switchToAllListsView() throws IOException {
@@ -1009,6 +1012,24 @@ public class SpecificListController implements Initializable {
 
     @FXML
     @SuppressWarnings("unused")
+    private void initializeOptionsMenu() {
+        ContextMenu options_menu = new ContextMenu();
+        addNewMenuItem(options_menu, "Delete All Checked Items", (ActionEvent ae) -> {
+            System.out.println("Deleting All checked items...");
+        });
+        addNewMenuItem(options_menu, "Set as Default List Order", (ActionEvent ae) -> {
+            System.out.println("Setting current list order as default list order...");
+        });
+        addNewMenuItem(options_menu, "Reset List", (ActionEvent ae) -> {
+            System.out.println("Resetting list...");
+        });
+        // TO-DO: Figure out how to get a tiered context menu (i.e. Sort By > Status or Alphabet)
+
+        options_button.setContextMenu(options_menu);
+    }
+
+    @FXML
+    @SuppressWarnings("unused")
     private void optionsMenu() { // TO-DO: Continue updating code to display Options Menu
         final Stage dialog = App.getRoot(); // gets this window
         try {
@@ -1027,7 +1048,7 @@ public class SpecificListController implements Initializable {
             });
 
             // create options menu scene
-            Scene options_scene = new Scene((new FXMLLoader((App.class.getResource("SpecificListViewOptions.fxml"))).load()));
+            Scene options_scene = new Scene((new FXMLLoader((App.class.getResource("SpecificListViewOptions.fxml"))).load()), 800, 600);
             options_scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
 
             // set this window's scene to the Options Menu scene
