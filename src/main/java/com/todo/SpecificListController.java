@@ -1,6 +1,7 @@
 package com.todo;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -12,18 +13,21 @@ import org.bson.types.ObjectId;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
@@ -54,6 +58,7 @@ public class SpecificListController implements Initializable {
     @FXML private HBox top_content;
     @FXML private VBox list_container;
     private ArrayList<ListItem> list_items;
+    private ArrayList<ListItem> default_order;
     private SQLController db;
     private boolean editing = false;
     private final int undo_limit = 50;
@@ -61,7 +66,7 @@ public class SpecificListController implements Initializable {
     private ListState base_state;
     private final Deque<ListState> undo_stack = new ArrayDeque<>();
     private final Deque<ListState> redo_stack = new ArrayDeque<>();
-    private final Scene curr_scene = App.getRoot().getScene();
+    // private final Scene curr_scene = App.getRoot().getScene();
     private final Image unchecked_image = new Image(App.class.getResource("images/Checkbox-Unchecked.png").toExternalForm());
     private final Image checked_image = new Image(App.class.getResource("images/Checkbox-Checked-V2.png").toExternalForm());
 
@@ -85,6 +90,7 @@ public class SpecificListController implements Initializable {
         System.out.println("Specific List: " + current_list);
         
         list_items = db.getList(current_list);
+        default_order = db.getList(current_list);
 
         original_state = new ListState(current_list, list_items);
         base_state = new ListState(current_list, list_items);
@@ -472,22 +478,31 @@ public class SpecificListController implements Initializable {
         ImageView checkbox = new ImageView();
         checkbox.setPreserveRatio(true);
         checkbox.setFitWidth(18);
+        
+        Node parent = item_button.getParent();
+        ListItem item = list_items.get(list_container.getChildren().indexOf(parent));
+        String item_id = item.getId();
 
         if(item_button.getStyleClass().contains("checked_item")) {
             item_button.getStyleClass().remove("checked_item");
             check = false;
             checkbox.setImage(unchecked_image);
             item_button.setGraphic(checkbox);
+
+            int new_ind = findNewIndex(item);
+            reorderList((HBox)parent, list_items.indexOf(item), new_ind);
         }
         else {
             item_button.getStyleClass().add("checked_item");
             check = true;
             checkbox.setImage(checked_image);
             item_button.setGraphic(checkbox);
+
+            int new_ind = findLastUncheckedItem();
+            reorderList((HBox)parent, list_items.indexOf(item), new_ind);
         }
 
-        Node parent = item_button.getParent();
-        String item_id = list_items.get(list_container.getChildren().indexOf(parent)).getId();
+        
         boolean updated = updateListItem(item_id, item_button.getText(), check);
         
         if(updated)
@@ -522,6 +537,68 @@ public class SpecificListController implements Initializable {
         else if (!all_checked) {
             specific_list_label.getStyleClass().remove("checked_item");
         }
+    }
+
+    private int findLastUncheckedItem() {
+        // find index of last unchecked item
+        int last_unchecked_id = -1;
+
+        for (int i = 0; i < list_items.size(); i++) {
+            if(!list_items.get(i).getStatus()) {
+                last_unchecked_id = i;
+            }
+        }
+
+        return last_unchecked_id;
+    }
+
+    private int findNewIndex(ListItem item_to_find) {
+        int ind = findLastUncheckedItem();
+        System.out.println("ind: " + ind);
+        int df_ind = -1;
+
+        if(ind == -1) {
+            return 0;
+        }
+
+        for (int i = 0; i < default_order.size(); i++) {
+            if(default_order.get(i).getName().equals(item_to_find.getName()) && default_order.get(i).getId().equals(item_to_find.getId())) {
+                df_ind = i;
+                System.out.println("df_ind: " + df_ind);
+                break;
+            }
+        }
+
+        if(df_ind != -1) {
+            for (int i = ind; i >= 0; i--) {
+                int r_ind = -1;
+                ListItem curr_item = list_items.get(i);
+                
+                for (int j = 0; j < default_order.size(); j++) {
+                    if(default_order.get(j).getName().equals(curr_item.getName()) && default_order.get(j).getId().equals(curr_item.getId())) {
+                        r_ind = j;
+                        break;
+                    }
+                }
+
+                System.out.println("r_ind: " + r_ind);
+
+                if(r_ind == -1 || r_ind > df_ind) {
+                    ind = i;
+                    System.out.println("new ind: " + ind);
+                }
+                else if (r_ind < df_ind) {
+                    ind = i+1;
+                }
+            }
+        }
+        else {
+            ind++;
+        }
+
+        System.out.println("Final ind: " + ind);
+
+        return ind;
     }
 
     private void enableUndoRedo() {
@@ -596,9 +673,7 @@ public class SpecificListController implements Initializable {
         return result;
     }
 
-    @SuppressWarnings("unused")
-    private boolean reorderListItem(String item_id, String item_name, int new_placement_index) {
-        boolean result = false;
+    private void reorderListItem(String item_id, String item_name, int new_placement_index) {
         ListItem item_to_reorder = getListItem(item_id, item_name);
 
         // remove the item from the list items list
@@ -608,11 +683,8 @@ public class SpecificListController implements Initializable {
         list_items.add(new_placement_index, item_to_reorder);
 
         System.out.println("Reordered list_items ArrayList.");
-
-        return true;
     }
 
-    @SuppressWarnings("unused")
     private void reorderList(HBox item_to_reorder, int old_index, int new_index) {
         if(old_index == new_index) {
             System.out.println("Reorder indexes match; Cancelling reorder...");
@@ -1010,20 +1082,76 @@ public class SpecificListController implements Initializable {
         }
     }
 
-    @FXML
     @SuppressWarnings("unused")
+    private void optionsDeleteChecked() {
+        /*
+         * Loop over the list of items and if it is checked, delete it
+         */
+        System.out.println("Deleting all checked items...");
+    }
+
+    @SuppressWarnings("unused")
+    private void optionsSetDefaultOrder() {
+        System.out.println("Setting current list order as default list order...");
+    }
+
+    @SuppressWarnings("unused")
+    private void optionsResetList() {
+        System.out.println("Resetting list...");
+    }
+
+    private void optionsSortBy(String sort_criteria) {
+        System.out.println("Sorting by: " + sort_criteria);
+    }
+
+    @FXML
     private void initializeOptionsMenu() {
         ContextMenu options_menu = new ContextMenu();
         addNewMenuItem(options_menu, "Delete All Checked Items", (ActionEvent ae) -> {
-            System.out.println("Deleting All checked items...");
+            // call delete all checked items method
+            optionsDialog("optionsDeleteChecked");
         });
         addNewMenuItem(options_menu, "Set as Default List Order", (ActionEvent ae) -> {
-            System.out.println("Setting current list order as default list order...");
+            // call list order method
+            optionsDialog("optionsSetDefaultOrder");
         });
         addNewMenuItem(options_menu, "Reset List", (ActionEvent ae) -> {
-            System.out.println("Resetting list...");
+            // call reset method
+            optionsDialog("optionsResetList");
         });
-        // TO-DO: Figure out how to get a tiered context menu (i.e. Sort By > Status or Alphabet)
+
+        Menu sort_menu = new Menu("Sort By: ");
+        ToggleGroup sort_toggle = new ToggleGroup();
+        RadioMenuItem sort_default = new RadioMenuItem("Default Order");
+        RadioMenuItem sort_alpha = new RadioMenuItem("Name");
+        RadioMenuItem sort_status = new RadioMenuItem("Status");
+
+        sort_default.setOnAction((ActionEvent ae) -> {
+            // call sort method
+            optionsSortBy("Default");
+        });
+        sort_default.setSelected(true);
+
+        sort_alpha.setOnAction((ActionEvent ae) -> {
+            // call sort method
+            optionsSortBy("Name");
+        });
+
+        sort_status.setOnAction((ActionEvent ae) -> {
+            // call sort method
+            optionsSortBy("Status");
+        });
+
+        sort_default.setToggleGroup(sort_toggle);
+        sort_alpha.setToggleGroup(sort_toggle);
+        sort_status.setToggleGroup(sort_toggle);
+
+        sort_menu.getItems().addAll(sort_default, sort_alpha, sort_status);
+
+        options_menu.getItems().add(sort_menu);
+        options_menu.setOnShowing((WindowEvent we) -> {
+            options_menu.show(options_button, Side.RIGHT, 0, 0);
+        });
 
         options_button.setContextMenu(options_menu);
     }
@@ -1031,37 +1159,94 @@ public class SpecificListController implements Initializable {
     @FXML
     @SuppressWarnings("unused")
     private void optionsMenu() { // TO-DO: Continue updating code to display Options Menu
-        final Stage dialog = App.getRoot(); // gets this window
-        try {
-            // when this window's close button is pressed...
-            dialog.setOnCloseRequest((WindowEvent ex) -> {
-                // prevent the window from actually closing
-                ex.consume();
+        options_button.getContextMenu().show(App.getRoot());
+        // final Stage dialog = App.getRoot(); // gets this window
+        // try {
+        //     // when this window's close button is pressed...
+        //     dialog.setOnCloseRequest((WindowEvent ex) -> {
+        //         // prevent the window from actually closing
+        //         ex.consume();
 
-                // set this window's scene back to this scene
-                dialog.setScene(curr_scene);
+        //         // set this window's scene back to this scene
+        //         dialog.setScene(curr_scene);
 
-                // update the close request to actually close this window again (instead of preventing it)
-                dialog.setOnCloseRequest((WindowEvent wex) -> {
-                    db.closeConnection();
-                });
-            });
+        //         // update the close request to actually close this window again (instead of preventing it)
+        //         dialog.setOnCloseRequest((WindowEvent wex) -> {
+        //             db.closeConnection();
+        //         });
+        //     });
 
-            // create options menu scene
-            Scene options_scene = new Scene((new FXMLLoader((App.class.getResource("SpecificListViewOptions.fxml"))).load()), 800, 600);
-            options_scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
+        //     // create options menu scene
+        //     Scene options_scene = new Scene((new FXMLLoader((App.class.getResource("SpecificListViewOptions.fxml"))).load()), 800, 600);
+        //     options_scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
 
-            // set this window's scene to the Options Menu scene
-            dialog.setScene(options_scene); 
-        }
-        catch (IOException ex) {
-            System.err.println("Scene Change Failed.");
-        }
+        //     // set this window's scene to the Options Menu scene
+        //     dialog.setScene(options_scene); 
+        // }
+        // catch (IOException ex) {
+        //     System.err.println("Scene Change Failed.");
+        // }
         
     }
 
     @FXML
-    @SuppressWarnings("unused")
+    private void optionsDialog(String methodToCall) {
+        final Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.setResizable(false);
+        dialog.setTitle("Are You Sure?");
+        
+        // create outer dialog box
+        VBox dialog_vbox = new VBox(20);
+        dialog_vbox.setAlignment(Pos.CENTER);
+        dialog_vbox.getStyleClass().add("full_page");
+        dialog_vbox.setPadding(new Insets(20));
+
+        // create details of dialog box
+        Label dialog_label = new Label("This change cannot be undone. Continue?");
+        dialog_label.setTextAlignment(TextAlignment.CENTER);
+        dialog_label.getStyleClass().add("header_label");
+
+        HBox dialog_hbox = new HBox(20);
+        dialog_hbox.setAlignment(Pos.CENTER);
+        dialog_hbox.setFillHeight(true);
+
+        Button yes_button = new Button("Yes, Continue");
+        yes_button.getStyleClass().add("container_sub_child");
+        yes_button.setStyle("-fx-border-width: 1px; -fx-border-color: white;");
+        yes_button.setOnAction((ActionEvent e) -> {
+            try {
+                dialog.close();
+                this.getClass().getDeclaredMethod(methodToCall).invoke(this);
+            }
+            catch(IllegalAccessException | NoSuchMethodException | SecurityException | InvocationTargetException ex) {
+                System.err.println("Change failed.");
+                System.err.println(ex.toString());
+            }
+        });
+
+        Button no_button = new Button("No, Cancel");
+        no_button.getStyleClass().add("container_sub_child");
+        no_button.setStyle("-fx-border-width: 1px; -fx-border-color: white;");
+        no_button.setOnAction((var e) -> {
+            System.out.println("Change cancelled.");
+            dialog.close();
+        });
+
+        dialog_hbox.getChildren().add(yes_button);
+        dialog_hbox.getChildren().add(no_button);
+
+        dialog_vbox.getChildren().add(dialog_label);
+        dialog_vbox.getChildren().add(dialog_hbox);
+
+        // display dialog box
+        Scene dialog_scene = new Scene(dialog_vbox, 400, 200);
+        dialog_scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
+        dialog.setScene(dialog_scene);
+        dialog.show();
+    }
+
+    @FXML
     private void exitDialog() { 
         if(original_state.isEqual(new ListState(specific_list_label.getText(), list_items)))
         {
@@ -1187,7 +1372,6 @@ public class SpecificListController implements Initializable {
     }
 
     @FXML
-    @SuppressWarnings("unused")
     private void saveList() throws IOException { 
         System.out.println("app list: " + App.getSpecificList() + "; new list: " + specific_list_label.getText());
 
