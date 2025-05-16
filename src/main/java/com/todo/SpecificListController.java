@@ -96,6 +96,8 @@ public class SpecificListController implements Initializable {
         base_state = new ListState(current_list, list_items);
         // base_state.printState();
 
+        initializeOptionsMenu();
+
         if(list_items.isEmpty()) {
             /* Start the page in Edit mode to see the Add Item button */
 
@@ -154,8 +156,6 @@ public class SpecificListController implements Initializable {
             }
             me.consume();
         });
-
-        initializeOptionsMenu();
     }
 
     private void switchToAllListsView() throws IOException {
@@ -539,6 +539,19 @@ public class SpecificListController implements Initializable {
         }
     }
 
+    private int findLastCheckedItem() {
+        // find index of last checked item
+        int last_checked_id = -1;
+
+        for (int i = 0; i < list_items.size(); i++) {
+            if(list_items.get(i).getStatus()) {
+                last_checked_id = i;
+            }
+        }
+
+        return last_checked_id;
+    }
+
     private int findLastUncheckedItem() {
         // find index of last unchecked item
         int last_unchecked_id = -1;
@@ -589,6 +602,7 @@ public class SpecificListController implements Initializable {
                 }
                 else if (r_ind < df_ind) {
                     ind = i+1;
+                    break;
                 }
             }
         }
@@ -618,12 +632,12 @@ public class SpecificListController implements Initializable {
         return menu;
     }
 
-    private ListItem getListItem(String item_id, String item_name) {
+    private ListItem getListItem(ArrayList<ListItem> array_to_search, String item_id, String item_name) {
         ListItem list_item = null;
         
-        for(int i = 0; i < list_items.size(); i++) {
-            if(list_items.get(i).getName().equals(item_name) && list_items.get(i).getId().equals(item_id)) {
-                list_item = list_items.get(i);
+        for(int i = 0; i < array_to_search.size(); i++) {
+            if(array_to_search.get(i).getName().equals(item_name) && array_to_search.get(i).getId().equals(item_id)) {
+                list_item = array_to_search.get(i);
             }
         }
 
@@ -639,7 +653,7 @@ public class SpecificListController implements Initializable {
     }
 
     private void deleteListItem(String item_id, String item_name) {
-        ListItem item_to_delete = getListItem(item_id, item_name);
+        ListItem item_to_delete = getListItem(list_items, item_id, item_name);
         list_items.remove(item_to_delete);
 
         System.out.println("Deleted list item \"" + item_name + "\"");
@@ -647,7 +661,7 @@ public class SpecificListController implements Initializable {
 
     private boolean updateListItem(String item_id, String item_name, String new_item_name) {
         boolean result = false;
-        ListItem item_to_update = getListItem(item_id, item_name);
+        ListItem item_to_update = getListItem(list_items, item_id, item_name);
         if(new_item_name != null && !new_item_name.equals(item_name))
         {
             item_to_update.setName(new_item_name);
@@ -661,7 +675,7 @@ public class SpecificListController implements Initializable {
 
     private boolean updateListItem(String item_id, String item_name, boolean item_status) {
         boolean result = false;
-        ListItem item_to_update = getListItem(item_id, item_name);
+        ListItem item_to_update = getListItem(list_items, item_id, item_name);
 
         if(item_status != item_to_update.getStatus()) {
             item_to_update.setStatus(item_status);
@@ -674,7 +688,7 @@ public class SpecificListController implements Initializable {
     }
 
     private void reorderListItem(String item_id, String item_name, int new_placement_index) {
-        ListItem item_to_reorder = getListItem(item_id, item_name);
+        ListItem item_to_reorder = getListItem(list_items, item_id, item_name);
 
         // remove the item from the list items list
         list_items.remove(item_to_reorder);
@@ -1090,18 +1104,45 @@ public class SpecificListController implements Initializable {
         System.out.println("Deleting all checked items...");
     }
 
-    @SuppressWarnings("unused")
-    private void optionsSetDefaultOrder() {
-        System.out.println("Setting current list order as default list order...");
+    private void optionsMarkListCompleted() {
+        System.out.println("Marking list as completed...");
     }
 
     @SuppressWarnings("unused")
     private void optionsResetList() {
         System.out.println("Resetting list...");
+
+
+    }
+
+    @SuppressWarnings("unused")
+    private void optionsSetDefaultOrder() {
+        System.out.println("Setting current list order as default list order...");
+
+        ArrayList<ListItem> temp_arr = new ArrayList<>();
+
+        for (ListItem item : list_items) {
+            temp_arr.add(new ListItem(item));
+        }
+
+        default_order.clear();
+
+        for (ListItem item : temp_arr) {
+            default_order.add(new ListItem(item));
+        }
+
+        // System.out.println("Default Order:");
+        // for (ListItem item : default_order) {
+        //     System.out.println("   " + item.getName() + " - " + item.getStatus());
+        // }
     }
 
     private void optionsSortBy(String sort_criteria) {
         System.out.println("Sorting by: " + sort_criteria);
+    }
+
+    private void optionsUncheckAllItems() {
+        System.out.println("Unchecking all items...");
     }
 
     @FXML
@@ -1111,13 +1152,18 @@ public class SpecificListController implements Initializable {
             // call delete all checked items method
             optionsDialog("optionsDeleteChecked");
         });
-        addNewMenuItem(options_menu, "Set as Default List Order", (ActionEvent ae) -> {
-            // call list order method
-            optionsDialog("optionsSetDefaultOrder");
+        addNewMenuItem(options_menu, "Mark List as Completed", (ActionEvent ae) -> {
+            // call mark list as completed method
+            optionsMarkListCompleted();
         });
         addNewMenuItem(options_menu, "Reset List", (ActionEvent ae) -> {
             // call reset method
             optionsDialog("optionsResetList");
+        });
+
+        addNewMenuItem(options_menu, "Set as Default List Order", (ActionEvent ae) -> {
+            // call list order method
+            optionsDialog("optionsSetDefaultOrder");
         });
 
         Menu sort_menu = new Menu("Sort By: ");
@@ -1149,7 +1195,61 @@ public class SpecificListController implements Initializable {
         sort_menu.getItems().addAll(sort_default, sort_alpha, sort_status);
 
         options_menu.getItems().add(sort_menu);
+        addNewMenuItem(options_menu, "Uncheck All Items", (ActionEvent ae) -> {
+            // call uncheck all items method
+            optionsUncheckAllItems();
+        });
+
         options_menu.setOnShowing((WindowEvent we) -> {
+            // determine whether to diable the "Delete All Checked Items" and "Uncheck All Items" options
+            if(findLastCheckedItem() == -1) {
+                options_menu.getItems().get(0).setDisable(true);
+                // Tooltip tooltip_del = new Tooltip("There are no checked items to delete");
+                // Tooltip.install(options_menu.getItems().get(0).getStyleableNode(), tooltip_del);
+
+                options_menu.getItems().get(5).setDisable(true);
+                // Tooltip tooltip_unc = new Tooltip("There are no checked items to uncheck");
+                // Tooltip.install(options_menu.getItems().get(5).getStyleableNode(), tooltip_unc);
+            }
+            else {
+                options_menu.getItems().get(0).setDisable(false);
+                options_menu.getItems().get(5).setDisable(false);
+            }
+
+            // determine whether to disable the "Mark List as Completed" option
+            if(findLastUncheckedItem() == -1) {
+                options_menu.getItems().get(1).setDisable(true);
+                // Tooltip tooltip = new Tooltip("The list is already marked as completed");
+                // Tooltip.install(options_menu.getItems().get(1).getStyleableNode(), tooltip);
+            }
+            else {
+                options_menu.getItems().get(1).setDisable(false);
+                // Tooltip tooltip= new Tooltip("Checks all items and marks list as complete");
+                // Tooltip.install(options_menu.getItems().get(1).getStyleableNode(), tooltip);
+            }
+            
+            // determine whether to disable the "Reset List" option
+            if(original_state.isEqual(new ListState(specific_list_label.getText(), list_items))) {
+                options_menu.getItems().get(2).setDisable(true);                
+                // Tooltip tooltip = new Tooltip("Cannot reset since list matches most recent saved state");
+                // Tooltip.install(options_menu.getItems().get(2).getStyleableNode(), tooltip);
+            }
+            else {
+                options_menu.getItems().get(2).setDisable(false);
+                // Tooltip tooltip = new Tooltip("Resets the list to its most recent saved state");
+                // Tooltip.install(options_menu.getItems().get(2).getStyleableNode(), tooltip);
+            }
+
+            // determine whether to disable the "Set as Default List Order" option
+            if(!editing) {
+                options_menu.getItems().get(3).setDisable(true);
+                // Tooltip tooltip= new Tooltip("This option is only available in Edit mode");
+                // Tooltip.install(options_menu.getItems().get(3).getStyleableNode(), tooltip);
+            }
+            else {
+                options_menu.getItems().get(3).setDisable(false);
+            }
+
             options_menu.show(options_button, Side.RIGHT, 0, 0);
         });
 
@@ -1159,7 +1259,7 @@ public class SpecificListController implements Initializable {
     @FXML
     @SuppressWarnings("unused")
     private void optionsMenu() { // TO-DO: Continue updating code to display Options Menu
-        options_button.getContextMenu().show(App.getRoot());
+        options_button.getContextMenu().show(options_button, Side.RIGHT, 0, 0);
         // final Stage dialog = App.getRoot(); // gets this window
         // try {
         //     // when this window's close button is pressed...

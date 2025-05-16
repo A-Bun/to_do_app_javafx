@@ -12,6 +12,12 @@ public class ListItem {
         this.checked = i_checked;
     }
 
+     public ListItem(ListItem list_item) {
+        this.id = list_item.getId();
+        this.name = list_item.getName();
+        this.checked = list_item.getStatus();
+    }
+
     public String getId() {
         return id;
     }
