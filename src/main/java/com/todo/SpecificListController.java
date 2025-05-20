@@ -11,6 +11,7 @@ import java.util.ResourceBundle;
 import org.bson.types.ObjectId;
 
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -70,6 +71,10 @@ public class SpecificListController implements Initializable {
     // private final Scene curr_scene = App.getRoot().getScene();
     private final Image unchecked_image = new Image(App.class.getResource("images/Checkbox-Unchecked.png").toExternalForm());
     private final Image checked_image = new Image(App.class.getResource("images/Checkbox-Checked-V2.png").toExternalForm());
+    private String sorting_by;
+    private final String SORT_DEFAULT = "Default";
+    private final String SORT_ALPHA = "Name";
+    private final String SORT_STATUS = "Status";
 
     @FXML
     @Override
@@ -97,6 +102,7 @@ public class SpecificListController implements Initializable {
         base_state = new ListState(current_list, list_items);
         // base_state.printState();
 
+        sorting_by = SORT_DEFAULT;
         initializeOptionsMenu();
 
         if(list_items.isEmpty()) {
@@ -707,6 +713,8 @@ public class SpecificListController implements Initializable {
 
         reorderListItem(item.getId(), item.getName(), new_index);
 
+        sorting_by = "Other";
+
         // for (ListItem listItem : list_items) {
         //     System.out.println(listItem.getName());
         // }
@@ -1138,15 +1146,9 @@ public class SpecificListController implements Initializable {
     private void optionsSetDefaultOrder() {
         System.out.println("Setting current list order as default list order...");
 
-        ArrayList<ListItem> temp_arr = new ArrayList<>();
-
-        for (ListItem item : list_items) {
-            temp_arr.add(new ListItem(item));
-        }
-
         default_order.clear();
 
-        for (ListItem item : temp_arr) {
+        for (ListItem item : list_items) {
             default_order.add(new ListItem(item));
         }
 
@@ -1157,7 +1159,45 @@ public class SpecificListController implements Initializable {
     }
 
     private void optionsSortBy(String sort_criteria) {
-        System.out.println("Sorting by: " + sort_criteria);
+        System.out.print("Sorting by: "); // TO-DO: Work on sort method
+
+        switch (sort_criteria) {
+            case SORT_ALPHA: 
+                if(!sorting_by.equals(SORT_ALPHA)) {
+                    System.out.println(SORT_ALPHA);
+                    sorting_by = SORT_ALPHA;
+                    list_items.sort(ListItem.comparator);
+                    updateStack();
+                    updateListState(new ListState(specific_list_label.getText(), list_items));
+                }
+                else {
+                    System.out.println("Cancelled - already sorting by " + sorting_by);
+                }
+                break;
+            case SORT_STATUS: 
+                if(!sorting_by.equals(SORT_STATUS)) {
+                    System.out.println(SORT_STATUS);
+                    sorting_by = SORT_STATUS;
+                    // list_items.sort(ListItem.comparator);
+                    // updateStack();
+                    // updateListState(new ListState(specific_list_label.getText(), list_items));
+                }
+                else {
+                    System.out.println("Cancelled - already sorting by " + sorting_by);
+                }
+                break;
+            default: 
+                if(!sorting_by.equals(SORT_DEFAULT)) {
+                    System.out.println(SORT_DEFAULT);
+                    sorting_by = SORT_DEFAULT;
+                    // list_items.sort(ListItem.comparator);
+                    // updateStack();
+                    // updateListState(new ListState(specific_list_label.getText(), list_items));
+                }
+                else {
+                    System.out.println("Cancelled - already sorting by " + sorting_by);
+                }
+        }
     }
 
     private void optionsUncheckAllItems() {
@@ -1196,23 +1236,23 @@ public class SpecificListController implements Initializable {
         Menu sort_menu = new Menu("Sort By: ");
         ToggleGroup sort_toggle = new ToggleGroup();
         RadioMenuItem sort_default = new RadioMenuItem("Default Order");
-        RadioMenuItem sort_alpha = new RadioMenuItem("Name");
-        RadioMenuItem sort_status = new RadioMenuItem("Status");
+        RadioMenuItem sort_alpha = new RadioMenuItem(SORT_ALPHA);
+        RadioMenuItem sort_status = new RadioMenuItem(SORT_STATUS);
 
         sort_default.setOnAction((ActionEvent ae) -> {
             // call sort method
-            optionsSortBy("Default");
+            optionsSortBy(SORT_DEFAULT);
         });
         sort_default.setSelected(true);
 
         sort_alpha.setOnAction((ActionEvent ae) -> {
             // call sort method
-            optionsSortBy("Name");
+            optionsSortBy(SORT_ALPHA);
         });
 
         sort_status.setOnAction((ActionEvent ae) -> {
             // call sort method
-            optionsSortBy("Status");
+            optionsSortBy(SORT_STATUS);
         });
 
         sort_default.setToggleGroup(sort_toggle);
@@ -1220,6 +1260,29 @@ public class SpecificListController implements Initializable {
         sort_status.setToggleGroup(sort_toggle);
 
         sort_menu.getItems().addAll(sort_default, sort_alpha, sort_status);
+        sort_menu.setOnShowing((Event e) -> {
+            switch (sorting_by) {
+                case SORT_DEFAULT:
+                    sort_default.setSelected(true);
+                    sort_alpha.setSelected(false);
+                    sort_status.setSelected(false);
+                    break;
+                case SORT_ALPHA:
+                    sort_default.setSelected(false);
+                    sort_alpha.setSelected(true);
+                    sort_status.setSelected(false);
+                    break;
+                case SORT_STATUS:
+                    sort_default.setSelected(false);
+                    sort_alpha.setSelected(false);
+                    sort_status.setSelected(true);
+                    break;
+                default:
+                    sort_default.setSelected(false);
+                    sort_alpha.setSelected(false);
+                    sort_status.setSelected(false);
+            }            
+        });
 
         options_menu.getItems().add(sort_menu);
         addNewMenuItem(options_menu, "Uncheck All Items", (ActionEvent ae) -> {
