@@ -28,6 +28,7 @@ import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
@@ -567,7 +568,6 @@ public class SpecificListController implements Initializable {
 
     private int findNewIndex(ListItem item_to_find) {
         int ind = findLastUncheckedItem();
-        System.out.println("ind: " + ind);
         int df_ind = -1;
 
         if(ind == -1) {
@@ -577,7 +577,6 @@ public class SpecificListController implements Initializable {
         for (int i = 0; i < default_order.size(); i++) {
             if(default_order.get(i).getName().equals(item_to_find.getName()) && default_order.get(i).getId().equals(item_to_find.getId())) {
                 df_ind = i;
-                System.out.println("df_ind: " + df_ind);
                 break;
             }
         }
@@ -594,11 +593,8 @@ public class SpecificListController implements Initializable {
                     }
                 }
 
-                System.out.println("r_ind: " + r_ind);
-
                 if(r_ind == -1 || r_ind > df_ind) {
                     ind = i;
-                    System.out.println("new ind: " + ind);
                 }
                 else if (r_ind < df_ind) {
                     ind = i+1;
@@ -609,8 +605,6 @@ public class SpecificListController implements Initializable {
         else {
             ind++;
         }
-
-        System.out.println("Final ind: " + ind);
 
         return ind;
     }
@@ -712,8 +706,6 @@ public class SpecificListController implements Initializable {
         list_container.getChildren().add(new_index, item_to_reorder);
 
         reorderListItem(item.getId(), item.getName(), new_index);
-        
-        updateStack();
 
         // for (ListItem listItem : list_items) {
         //     System.out.println(listItem.getName());
@@ -836,6 +828,7 @@ public class SpecificListController implements Initializable {
                     moved_hbox.getChildren().get(2).getStyleClass().remove("drag_highlighted");
                     de.setDropCompleted(true);
                     reorderList(moved_hbox, orig_idx, new_idx);
+                    updateStack();
                 }
                 else {
                     System.out.println("Nothing to drop");
@@ -1004,6 +997,8 @@ public class SpecificListController implements Initializable {
             }
             else if(i > list_items.size()-1) { /* delete the button */
                list_container.getChildren().remove(i);
+               loop_cnt--;
+               i--;
             }
             else { /* update the button text */
                 ListItem item = list_items.get(i);
@@ -1096,26 +1091,50 @@ public class SpecificListController implements Initializable {
         }
     }
 
-    @SuppressWarnings("unused")
     private void optionsDeleteChecked() {
         /*
          * Loop over the list of items and if it is checked, delete it
          */
         System.out.println("Deleting all checked items...");
+
+        for (int i = 0; i < list_items.size(); i++) {
+            ListItem item = list_items.get(i);
+            if(item.getStatus()) {
+                list_items.remove(item);
+                list_container.getChildren().remove(i);
+                i--;
+            }
+        }
+
+        updateStack();
+        updateListState(new ListState(specific_list_label.getText(), list_items));
     }
 
     private void optionsMarkListCompleted() {
         System.out.println("Marking list as completed...");
+
+        for (ListItem item : list_items) {
+            if(!item.getStatus()) {
+                item.setStatus(true);
+            }
+        }
+
+        updateStack();
+        updateListState(new ListState(specific_list_label.getText(), list_items));
     }
 
     @SuppressWarnings("unused")
     private void optionsResetList() {
         System.out.println("Resetting list...");
 
-
+        updateListState(original_state);
+        undo_stack.clear();
+        undo_button.setDisable(true);
+        redo_stack.clear();
+        redo_button.setDisable(true);
+        optionsSetDefaultOrder(); // possible setting to toggle
     }
 
-    @SuppressWarnings("unused")
     private void optionsSetDefaultOrder() {
         System.out.println("Setting current list order as default list order...");
 
@@ -1143,14 +1162,22 @@ public class SpecificListController implements Initializable {
 
     private void optionsUncheckAllItems() {
         System.out.println("Unchecking all items...");
+
+        for (ListItem item : list_items) {
+            if(item.getStatus()) {
+                item.setStatus(false);
+            }
+        }
+
+        updateStack();
+        updateListState(new ListState(specific_list_label.getText(), list_items));
     }
 
-    @FXML
     private void initializeOptionsMenu() {
         ContextMenu options_menu = new ContextMenu();
         addNewMenuItem(options_menu, "Delete All Checked Items", (ActionEvent ae) -> {
             // call delete all checked items method
-            optionsDialog("optionsDeleteChecked");
+            optionsDeleteChecked();
         });
         addNewMenuItem(options_menu, "Mark List as Completed", (ActionEvent ae) -> {
             // call mark list as completed method
@@ -1201,53 +1228,113 @@ public class SpecificListController implements Initializable {
         });
 
         options_menu.setOnShowing((WindowEvent we) -> {
-            // determine whether to diable the "Delete All Checked Items" and "Uncheck All Items" options
-            if(findLastCheckedItem() == -1) {
+            Tooltip tt_renaming = new Tooltip("Cannot be done while renaming item/list");
+            Tooltip tt_cant_delete = new Tooltip("There are no checked items to delete");
+            Tooltip tt_delete = new Tooltip("Deletes all checked items in the list");
+            Tooltip tt_cant_uncheck = new Tooltip("There are no checked items to uncheck");
+            Tooltip tt_uncheck = new Tooltip("Unchecks all checked items in the list");
+            Tooltip tt_already_cmpl = new Tooltip("The list is already marked as completed");
+            Tooltip tt_mark_cmpl = new Tooltip("Checks all items and marks list as complete");
+            Tooltip tt_cant_reset = new Tooltip("Cannot reset since list matches most recent saved state");
+            Tooltip tt_reset = new Tooltip("Resets the list to its most recent saved state");
+            Tooltip tt_available = new Tooltip("This option is only available in Edit mode");
+            Tooltip tt_default_order = new Tooltip("Sets the current list order to the default order (for sorting)");
+
+            // disable all options if renaming is in progress
+            if(stillRenaming()) {
+                Tooltip.uninstall(options_menu.getItems().get(0).getStyleableNode(), tt_delete);
+                Tooltip.uninstall(options_menu.getItems().get(0).getStyleableNode(), tt_cant_delete);
                 options_menu.getItems().get(0).setDisable(true);
-                // Tooltip tooltip_del = new Tooltip("There are no checked items to delete");
-                // Tooltip.install(options_menu.getItems().get(0).getStyleableNode(), tooltip_del);
-
+                Tooltip.uninstall(options_menu.getItems().get(5).getStyleableNode(), tt_uncheck);
+                Tooltip.uninstall(options_menu.getItems().get(5).getStyleableNode(), tt_cant_uncheck);
                 options_menu.getItems().get(5).setDisable(true);
-                // Tooltip tooltip_unc = new Tooltip("There are no checked items to uncheck");
-                // Tooltip.install(options_menu.getItems().get(5).getStyleableNode(), tooltip_unc);
-            }
-            else {
-                options_menu.getItems().get(0).setDisable(false);
-                options_menu.getItems().get(5).setDisable(false);
-            }
-
-            // determine whether to disable the "Mark List as Completed" option
-            if(findLastUncheckedItem() == -1) {
+                Tooltip.uninstall(options_menu.getItems().get(1).getStyleableNode(), tt_mark_cmpl);
+                Tooltip.uninstall(options_menu.getItems().get(1).getStyleableNode(), tt_already_cmpl);
                 options_menu.getItems().get(1).setDisable(true);
-                // Tooltip tooltip = new Tooltip("The list is already marked as completed");
-                // Tooltip.install(options_menu.getItems().get(1).getStyleableNode(), tooltip);
-            }
-            else {
-                options_menu.getItems().get(1).setDisable(false);
-                // Tooltip tooltip= new Tooltip("Checks all items and marks list as complete");
-                // Tooltip.install(options_menu.getItems().get(1).getStyleableNode(), tooltip);
-            }
-            
-            // determine whether to disable the "Reset List" option
-            if(original_state.isEqual(new ListState(specific_list_label.getText(), list_items))) {
-                options_menu.getItems().get(2).setDisable(true);                
-                // Tooltip tooltip = new Tooltip("Cannot reset since list matches most recent saved state");
-                // Tooltip.install(options_menu.getItems().get(2).getStyleableNode(), tooltip);
-            }
-            else {
-                options_menu.getItems().get(2).setDisable(false);
-                // Tooltip tooltip = new Tooltip("Resets the list to its most recent saved state");
-                // Tooltip.install(options_menu.getItems().get(2).getStyleableNode(), tooltip);
-            }
-
-            // determine whether to disable the "Set as Default List Order" option
-            if(!editing) {
+                Tooltip.uninstall(options_menu.getItems().get(2).getStyleableNode(), tt_reset);
+                Tooltip.uninstall(options_menu.getItems().get(2).getStyleableNode(), tt_cant_reset);
+                options_menu.getItems().get(2).setDisable(true);
+                Tooltip.uninstall(options_menu.getItems().get(3).getStyleableNode(), tt_default_order);
+                Tooltip.uninstall(options_menu.getItems().get(3).getStyleableNode(), tt_available);
                 options_menu.getItems().get(3).setDisable(true);
-                // Tooltip tooltip= new Tooltip("This option is only available in Edit mode");
-                // Tooltip.install(options_menu.getItems().get(3).getStyleableNode(), tooltip);
+                options_menu.getItems().get(4).setDisable(true);
+                Tooltip.install(options_menu.getItems().get(0).getStyleableNode(), tt_renaming);
+                Tooltip.install(options_menu.getItems().get(1).getStyleableNode(), tt_renaming);
+                Tooltip.install(options_menu.getItems().get(2).getStyleableNode(), tt_renaming);
+                Tooltip.install(options_menu.getItems().get(3).getStyleableNode(), tt_renaming);
+                Tooltip.install(options_menu.getItems().get(4).getStyleableNode(), tt_renaming);
+                Tooltip.install(options_menu.getItems().get(5).getStyleableNode(), tt_renaming);
             }
             else {
-                options_menu.getItems().get(3).setDisable(false);
+                // reenable the sorting option
+                options_menu.getItems().get(4).setDisable(false);
+                Tooltip.uninstall(options_menu.getItems().get(4).getStyleableNode(), tt_renaming);
+                
+                // determine whether to diable the "Delete All Checked Items" and "Uncheck All Items" options
+                if(findLastCheckedItem() == -1) {
+                    options_menu.getItems().get(0).setDisable(true);
+                    Tooltip.uninstall(options_menu.getItems().get(0).getStyleableNode(), tt_delete);
+                    Tooltip.uninstall(options_menu.getItems().get(0).getStyleableNode(), tt_renaming);
+                    Tooltip.install(options_menu.getItems().get(0).getStyleableNode(), tt_cant_delete);
+
+                    options_menu.getItems().get(5).setDisable(true);
+                    Tooltip.uninstall(options_menu.getItems().get(5).getStyleableNode(), tt_uncheck);
+                    Tooltip.uninstall(options_menu.getItems().get(5).getStyleableNode(), tt_renaming);
+                    Tooltip.install(options_menu.getItems().get(5).getStyleableNode(), tt_cant_uncheck);
+                }
+                else {
+                    options_menu.getItems().get(0).setDisable(false);
+                    Tooltip.uninstall(options_menu.getItems().get(0).getStyleableNode(), tt_cant_delete);
+                    Tooltip.uninstall(options_menu.getItems().get(0).getStyleableNode(), tt_renaming);
+                    Tooltip.install(options_menu.getItems().get(0).getStyleableNode(), tt_delete);
+
+                    options_menu.getItems().get(5).setDisable(false);
+                    Tooltip.uninstall(options_menu.getItems().get(5).getStyleableNode(), tt_cant_uncheck);
+                    Tooltip.uninstall(options_menu.getItems().get(5).getStyleableNode(), tt_renaming);
+                    Tooltip.install(options_menu.getItems().get(5).getStyleableNode(), tt_uncheck);
+                }
+
+                // determine whether to disable the "Mark List as Completed" option
+                if(findLastUncheckedItem() == -1) {
+                    options_menu.getItems().get(1).setDisable(true);
+                    Tooltip.uninstall(options_menu.getItems().get(1).getStyleableNode(), tt_mark_cmpl);
+                    Tooltip.uninstall(options_menu.getItems().get(1).getStyleableNode(), tt_renaming);
+                    Tooltip.install(options_menu.getItems().get(1).getStyleableNode(), tt_already_cmpl);
+                }
+                else {
+                    options_menu.getItems().get(1).setDisable(false);
+                    Tooltip.uninstall(options_menu.getItems().get(1).getStyleableNode(), tt_already_cmpl);
+                    Tooltip.uninstall(options_menu.getItems().get(1).getStyleableNode(), tt_renaming);
+                    Tooltip.install(options_menu.getItems().get(1).getStyleableNode(), tt_mark_cmpl);
+                }
+                
+                // determine whether to disable the "Reset List" option
+                if(original_state.isEqual(new ListState(specific_list_label.getText(), list_items))) {
+                    options_menu.getItems().get(2).setDisable(true);
+                    Tooltip.uninstall(options_menu.getItems().get(2).getStyleableNode(), tt_reset);
+                    Tooltip.uninstall(options_menu.getItems().get(2).getStyleableNode(), tt_renaming);
+                    Tooltip.install(options_menu.getItems().get(2).getStyleableNode(), tt_cant_reset);
+                }
+                else {
+                    options_menu.getItems().get(2).setDisable(false);
+                    Tooltip.uninstall(options_menu.getItems().get(2).getStyleableNode(), tt_cant_reset);
+                    Tooltip.uninstall(options_menu.getItems().get(2).getStyleableNode(), tt_renaming);
+                    Tooltip.install(options_menu.getItems().get(2).getStyleableNode(), tt_reset);
+                }
+
+                // determine whether to disable the "Set as Default List Order" option
+                if(!editing) {
+                    options_menu.getItems().get(3).setDisable(true);
+                    Tooltip.uninstall(options_menu.getItems().get(3).getStyleableNode(), tt_default_order);
+                    Tooltip.uninstall(options_menu.getItems().get(3).getStyleableNode(), tt_renaming);
+                    Tooltip.install(options_menu.getItems().get(3).getStyleableNode(), tt_available);
+                }
+                else {
+                    options_menu.getItems().get(3).setDisable(false);
+                    Tooltip.uninstall(options_menu.getItems().get(3).getStyleableNode(), tt_available);
+                    Tooltip.uninstall(options_menu.getItems().get(3).getStyleableNode(), tt_renaming);
+                    Tooltip.install(options_menu.getItems().get(3).getStyleableNode(), tt_default_order);
+                }
             }
 
             options_menu.show(options_button, Side.RIGHT, 0, 0);
@@ -1487,6 +1574,7 @@ public class SpecificListController implements Initializable {
         redo_button.setDisable(true);
         original_state = new ListState(specific_list_label.getText(), list_items);
         base_state = new ListState(specific_list_label.getText(), list_items);
+        optionsSetDefaultOrder();
         toggleSave();
     }
 }
