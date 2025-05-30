@@ -7,13 +7,24 @@ public class ListItem {
     private String id;
     private String name;
     private boolean checked;
-    public static Comparator<ListItem> comparator = ((ListItem i1, ListItem i2) -> {
+    public static Comparator<ListItem> name_comparator = ((ListItem i1, ListItem i2) -> {
         int cmp = i1.getName().compareToIgnoreCase(i2.getName());
 
         if(cmp < 0) {
             return -1;
         }
         else if(cmp > 0) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    });
+    public static Comparator<ListItem> status_comparator = ((ListItem i1, ListItem i2) -> {
+        if(i2.getStatus() && i1.getStatus() != i2.getStatus()) {
+            return -1;
+        }
+        else if(i1.getStatus() && i1.getStatus() != i2.getStatus()) {
             return 1;
         }
         else {

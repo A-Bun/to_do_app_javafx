@@ -599,7 +599,7 @@ public class SpecificListController implements Initializable {
                     }
                 }
 
-                if(r_ind == -1 || r_ind > df_ind) {
+                if(r_ind == -1 || r_ind >= df_ind) {
                     ind = i;
                 }
                 else if (r_ind < df_ind) {
@@ -700,6 +700,7 @@ public class SpecificListController implements Initializable {
     }
 
     private void reorderList(HBox item_to_reorder, int old_index, int new_index) {
+        sorting_by = "Other";
         if(old_index == new_index) {
             System.out.println("Reorder indexes match; Cancelling reorder...");
             return;
@@ -712,8 +713,6 @@ public class SpecificListController implements Initializable {
         list_container.getChildren().add(new_index, item_to_reorder);
 
         reorderListItem(item.getId(), item.getName(), new_index);
-
-        sorting_by = "Other";
 
         // for (ListItem listItem : list_items) {
         //     System.out.println(listItem.getName());
@@ -1038,6 +1037,7 @@ public class SpecificListController implements Initializable {
     @SuppressWarnings("unused")
     private void undo() {
         ListState state_to_use;
+        sorting_by = "Other";
 
         redo_stack.offerFirst(undo_stack.pollFirst());
 
@@ -1066,6 +1066,7 @@ public class SpecificListController implements Initializable {
     @SuppressWarnings("unused")
     private void redo() {
         ListState state_to_use;
+        sorting_by = "Other";
 
         undo_stack.offerFirst(redo_stack.peekFirst());
 
@@ -1166,7 +1167,7 @@ public class SpecificListController implements Initializable {
                 if(!sorting_by.equals(SORT_ALPHA)) {
                     System.out.println(SORT_ALPHA);
                     sorting_by = SORT_ALPHA;
-                    list_items.sort(ListItem.comparator);
+                    list_items.sort(ListItem.name_comparator);
                     updateStack();
                     updateListState(new ListState(specific_list_label.getText(), list_items));
                 }
@@ -1178,9 +1179,9 @@ public class SpecificListController implements Initializable {
                 if(!sorting_by.equals(SORT_STATUS)) {
                     System.out.println(SORT_STATUS);
                     sorting_by = SORT_STATUS;
-                    // list_items.sort(ListItem.comparator);
-                    // updateStack();
-                    // updateListState(new ListState(specific_list_label.getText(), list_items));
+                    list_items.sort(ListItem.status_comparator);
+                    updateStack();
+                    updateListState(new ListState(specific_list_label.getText(), list_items));
                 }
                 else {
                     System.out.println("Cancelled - already sorting by " + sorting_by);
@@ -1190,9 +1191,23 @@ public class SpecificListController implements Initializable {
                 if(!sorting_by.equals(SORT_DEFAULT)) {
                     System.out.println(SORT_DEFAULT);
                     sorting_by = SORT_DEFAULT;
-                    // list_items.sort(ListItem.comparator);
-                    // updateStack();
-                    // updateListState(new ListState(specific_list_label.getText(), list_items));
+                    int ptr = 0;
+                    for(int i = 0; i < default_order.size(); i++) {
+                        ListItem curr_item = default_order.get(i);
+                        int idx = list_items.indexOf(getListItem(list_items, curr_item.getId(), curr_item.getName()));
+
+                        if(idx != -1 && idx != ptr) {
+                            ListItem temp = list_items.remove(idx);
+                            list_items.add(ptr, temp);
+                        }
+
+                        if(idx != -1) {
+                            ptr++;
+                        }
+                    }
+
+                    updateStack();
+                    updateListState(new ListState(specific_list_label.getText(), list_items));
                 }
                 else {
                     System.out.println("Cancelled - already sorting by " + sorting_by);
@@ -1264,23 +1279,35 @@ public class SpecificListController implements Initializable {
             switch (sorting_by) {
                 case SORT_DEFAULT:
                     sort_default.setSelected(true);
+                    sort_default.setDisable(true);
                     sort_alpha.setSelected(false);
+                    sort_alpha.setDisable(false);
                     sort_status.setSelected(false);
+                    sort_status.setDisable(false);
                     break;
                 case SORT_ALPHA:
                     sort_default.setSelected(false);
+                    sort_default.setDisable(false);
                     sort_alpha.setSelected(true);
+                    sort_alpha.setDisable(true);
                     sort_status.setSelected(false);
+                    sort_status.setDisable(false);
                     break;
                 case SORT_STATUS:
                     sort_default.setSelected(false);
+                    sort_default.setDisable(false);
                     sort_alpha.setSelected(false);
+                    sort_alpha.setDisable(false);
                     sort_status.setSelected(true);
+                    sort_status.setDisable(true);
                     break;
                 default:
                     sort_default.setSelected(false);
+                    sort_default.setDisable(false);
                     sort_alpha.setSelected(false);
+                    sort_alpha.setDisable(false);
                     sort_status.setSelected(false);
+                    sort_status.setDisable(false);
             }            
         });
 
