@@ -1,6 +1,8 @@
 package com.todo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
@@ -49,6 +51,22 @@ public class SQLController {
             result = true;
         } catch (Exception e) {
             System.out.println("Failed to close connection...");
+            result = false;
+        }
+        return result;
+    }
+
+    public boolean switchCollections(String coll_name) {
+        boolean result;
+
+        try {
+            MongoDatabase database = mongoClient.getDatabase("To-Do-Tracker");
+            collection = database.getCollection(coll_name);
+            System.out.println("Switched connection to " + coll_name + " collection successfully");
+            result = true;
+        } catch (Exception e) {
+            System.out.println("Failed to switch to " + coll_name + " collection...");
+            closeConnection();
             result = false;
         }
         return result;
@@ -221,6 +239,65 @@ public class SQLController {
         }
 
         return result;
+    }
+
+    /* This should only be ran once to create the new Settings collection (as practice) */
+    public void CreateSettings() throws Exception {
+        // create the new Settings Collection in MongoDB
+        MongoDatabase database = mongoClient.getDatabase("To-Do-Tracker");
+        database.createCollection("Settings");
+        
+        // create each new setting 
+        String setting_name;
+        String setting_desc;
+        HashMap<String, Object> setting_map = new HashMap<>();
+
+        setting_name = "Undo Limit";
+        setting_desc = "The maximum number of times you can undo previous list changes. The number gets reset upon saving or exiting the list. The default for this setting is 50.";
+        setting_map.put("Limit", 50);
+        AddNewSetting(setting_name, setting_desc, setting_map);
+        setting_map.clear();
+
+        setting_name = "Checked Item Placement";
+        setting_desc = "The location in the list where an item is placed after being checked.";
+        setting_map.put("Last Unchecked", true);
+        setting_map.put("Bottom of List", false);
+        AddNewSetting(setting_name, setting_desc, setting_map);
+        setting_map.clear();
+
+        setting_name = "Autosave";
+        setting_desc = "The ability to automatically save list changes after a defined amount of time has passed. The delay before autosaving can only be set when this setting is toggled on. The default delay is 1 minute.";
+        setting_map.put("Enabled", false);
+        setting_map.put("Delay", 1);
+        AddNewSetting(setting_name, setting_desc, setting_map);
+        setting_map.clear();
+
+        setting_name = "Undo Limit";
+        setting_desc = "The maximum number of times you can undo previous list changes. The number gets reset upon saving or exiting the list. The default for this setting is 50.";
+        setting_map.put("Limit", 50);
+        AddNewSetting(setting_name, setting_desc, setting_map);
+        setting_map.clear();
+    }
+
+    // This can be called whenever a new setting needs to be added to the Settings menu
+    public void AddNewSetting(String name, String description, Map<String, Object> options) {
+        MongoDatabase database = mongoClient.getDatabase("To-Do-Tracker");
+        MongoCollection<Document> coll = database.getCollection("Settings");
+
+        Document doc = new Document();
+        doc.append("name", name);
+        doc.append("description", description);
+        for (String key : options.keySet()) {
+            doc.append(key, options.get(key));
+        }
+
+        if (coll.find(new BsonDocument("name", new BsonString(name))).first() == null) {
+            coll.insertOne(doc);
+            System.out.println("Added new setting: " + name);
+        }
+        else {
+            System.out.println("ERROR: A setting already exists with the name \"" + name + ".\" Cancelling...");
+        }
     }
 
     /* TO BE DELETED */

@@ -115,10 +115,6 @@ public class AllListsController implements Initializable{
         iv1.setSmooth(true);
         iv1.setFitWidth(40);
         global_settings.setGraphic(iv1);
-
-        global_settings.setOnAction((ActionEvent e) -> {
-            System.out.println("Global: " + global_settings.getWidth());
-        });
         
         new_list_trigger.setOnAction((ActionEvent e) -> {
             all_lists_edit.setDisable(true);
@@ -291,6 +287,38 @@ public class AllListsController implements Initializable{
         if(list_container.getChildren().size() <= container_cnt) {
             all_lists_edit.setDisable(true);
         }
+    }
+
+    public void Settings() throws IOException {
+        System.out.println("Global: " + global_settings.getWidth());
+        System.out.println("Displaying Settings Menu...");
+        App.setRoot("SettingsView");
+        // final Stage dialog = App.getRoot(); // gets this window
+        // try {
+        //     // when this window's close button is pressed...
+        //     dialog.setOnCloseRequest((WindowEvent ex) -> {
+        //         // prevent the window from actually closing
+        //         ex.consume();
+
+        //         // set this window's scene back to this scene
+        //         dialog.setScene(curr_scene);
+
+        //         // update the close request to actually close this window again (instead of preventing it)
+        //         dialog.setOnCloseRequest((WindowEvent wex) -> {
+        //             db.closeConnection();
+        //         });
+        //     });
+
+        //     // create options menu scene
+        //     Scene options_scene = new Scene((new FXMLLoader((App.class.getResource("SpecificListViewOptions.fxml"))).load()), 800, 600);
+        //     options_scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
+
+        //     // set this window's scene to the Options Menu scene
+        //     dialog.setScene(options_scene); 
+        // }
+        // catch (IOException ex) {
+        //     System.err.println("Scene Change Failed.");
+        // }
     }
 
     /* TO BE DELETED */

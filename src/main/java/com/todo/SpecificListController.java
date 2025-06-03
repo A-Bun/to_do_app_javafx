@@ -1160,7 +1160,7 @@ public class SpecificListController implements Initializable {
     }
 
     private void optionsSortBy(String sort_criteria) {
-        System.out.print("Sorting by: "); // TO-DO: Work on sort method
+        System.out.print("Sorting by: ");
 
         switch (sort_criteria) {
             case SORT_ALPHA: 
@@ -1435,35 +1435,8 @@ public class SpecificListController implements Initializable {
 
     @FXML
     @SuppressWarnings("unused")
-    private void optionsMenu() { // TO-DO: Continue updating code to display Options Menu
+    private void optionsMenu() {
         options_button.getContextMenu().show(options_button, Side.RIGHT, 0, 0);
-        // final Stage dialog = App.getRoot(); // gets this window
-        // try {
-        //     // when this window's close button is pressed...
-        //     dialog.setOnCloseRequest((WindowEvent ex) -> {
-        //         // prevent the window from actually closing
-        //         ex.consume();
-
-        //         // set this window's scene back to this scene
-        //         dialog.setScene(curr_scene);
-
-        //         // update the close request to actually close this window again (instead of preventing it)
-        //         dialog.setOnCloseRequest((WindowEvent wex) -> {
-        //             db.closeConnection();
-        //         });
-        //     });
-
-        //     // create options menu scene
-        //     Scene options_scene = new Scene((new FXMLLoader((App.class.getResource("SpecificListViewOptions.fxml"))).load()), 800, 600);
-        //     options_scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
-
-        //     // set this window's scene to the Options Menu scene
-        //     dialog.setScene(options_scene); 
-        // }
-        // catch (IOException ex) {
-        //     System.err.println("Scene Change Failed.");
-        // }
-        
     }
 
     @FXML
