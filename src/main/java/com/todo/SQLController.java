@@ -21,22 +21,22 @@ import com.mongodb.client.MongoDatabase;
 public class SQLController {
 
     // Database direct connection string
-    private static final String CONNECTION_STRING = "mongodb+srv://alexisp30ples:v77s8ZhiG2lQ48KV@to-do-cluster-1.efhkz.mongodb.net/?retryWrites=true&w=majority&appName=To-Do-Cluster-1"; 
+    private static final String CONNECTION_STRING = "mongodb+srv://alexisp30ples:<PASSWORD>@to-do-cluster-1.efhkz.mongodb.net/?retryWrites=true&w=majority&appName=To-Do-Cluster-1"; 
 
     private MongoClient mongoClient;
     private MongoCollection<Document> collection;
 
     /* Open a new connection to the database */
-    public boolean openConnection() {
+    public boolean openConnection(String password) {
         boolean result;
         try {
-            mongoClient = MongoClients.create(CONNECTION_STRING);
+            mongoClient = MongoClients.create(CONNECTION_STRING.replace("<PASSWORD>", password));
             MongoDatabase database = mongoClient.getDatabase("To-Do-Tracker");
             collection = database.getCollection("Lists");
             System.out.println("Connection opened successfully");
             result = true;
         } catch (Exception e) {
-            System.out.println("Failed to open connection...");
+            System.out.println("Failed to open connection. Aborting...");
             result = false;
         }
         return result;

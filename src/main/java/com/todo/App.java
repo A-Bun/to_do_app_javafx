@@ -1,8 +1,11 @@
 package com.todo;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -18,10 +21,25 @@ public class App extends Application {
     private static Stage main_stage;
     private final static SQLController sqlctrl = new SQLController();
     private static String specific_list;
+    private final String pass_prop = "mdb.todocluster.password";
 
     @Override
     public void start(Stage stage) throws IOException {
-        sqlctrl.openConnection();
+        try (BufferedReader buffer = new BufferedReader(new FileReader("C:\\Projects\\Personal\\Apps\\MongoDB-ToDoCluster-Config.txt"))) {
+            System.setProperty(pass_prop, buffer.readLine());
+            buffer.close();
+        }
+        catch (Exception e) {
+            System.err.println("Configuration issue. Aborting...");
+            Platform.exit();
+            return;
+        }
+        
+        if(!sqlctrl.openConnection(System.getProperty(pass_prop))) {
+            Platform.exit();
+            return;
+        }
+
         scene = new Scene(loadFXML("AllListsView"), 800, 600);
         scene.getStylesheets().add(App.class.getResource("styles/Base_Style.css").toExternalForm());
         stage.setScene(scene);
