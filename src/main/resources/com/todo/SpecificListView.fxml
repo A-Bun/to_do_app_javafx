@@ -42,10 +42,13 @@
                             <children>
                             </children>
                             <padding>
-                                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0" />
+                                <Insets top="0.0" right="20.0" bottom="20.0" left="20.0" />
                             </padding>
                         </VBox>
                     </content>
+                    <padding>
+                        <Insets top="10.0" right="0.0" bottom="10.0" left="0.0" />
+                    </padding>
                 </ScrollPane>
             </center>
             <!-- <padding>

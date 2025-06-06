@@ -102,10 +102,10 @@ ScrollPane > .scroll-bar .thumb {
 }
 
 #all_lists_header {
-    -fx-padding: 5px;
+    -fx-padding: 10px 5px 1px 20px;
     -fx-border-width: 0px 0px 1px 0px;
     -fx-border-color: white;
-    padding: 5px;
+    padding: 10px 5px 1px 20px;
     border-width: 0px 0px 1px 0px;
     border-color: white;
 }

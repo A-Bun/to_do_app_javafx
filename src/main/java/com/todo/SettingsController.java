@@ -6,8 +6,6 @@ import java.util.ResourceBundle;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 public class SettingsController implements Initializable{
     private SQLController db;
@@ -17,29 +15,25 @@ public class SettingsController implements Initializable{
     public void initialize(URL location, ResourceBundle resources) {
         db = App.getSQLController();
 
-        final Stage stage = App.getRoot();
-        stage.setOnCloseRequest((WindowEvent we) -> {
-            we.consume();
+        App.getRoot(); // DELETE THIS
 
-            try {
-                if(!db.switchCollections("Lists")) {
-                    stage.close();
-                    return;
-                }
-                App.setRoot("AllListsView");
+        System.out.println("Undo Limit: " + db.GetSetting("Undo Limit"));
 
-                // update the close request to actually close this window again (instead of preventing it)
-                stage.setOnCloseRequest((WindowEvent wex) -> {
-                    db.closeConnection();
-                });
-            }
-            catch (IOException e) {
-                System.err.println("Scene switch failed...");
-            }
-        });
+        /* Loop over settings documents from DB and manually display each one */
+    }
 
-        if(!db.switchCollections("Settings")) {
-            stage.close();
+    private void switchToAllListsView() throws IOException {
+        App.setRoot("AllListsView");
+    }
+
+    @FXML
+    @SuppressWarnings("unused")
+    private void exitDialog() {
+        try {
+            System.out.println("Exit Granted.");
+            switchToAllListsView();
+        } catch (IOException ex) {
+            System.err.println("Exit Failed.");
         }
     }
 }

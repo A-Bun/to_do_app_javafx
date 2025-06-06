@@ -25,7 +25,7 @@ public class AllListsController implements Initializable{
     @FXML private Button all_lists_edit;
     @FXML private Button global_settings;
     private Boolean editing = false;
-    final private int container_cnt = 2;
+    final private int container_cnt = 1;
     private int cntr;
     private final ArrayList<ListItem> blank_list = new ArrayList<>();
     private final ArrayList<String> old_list_names = new ArrayList<>();
@@ -47,17 +47,19 @@ public class AllListsController implements Initializable{
         }
         else {
             list_container.setOnMouseEntered((MouseEvent e) -> {
-                System.out.println("Resizing List Buttons");
+                if(!editing) {
+                    System.out.println("Resizing List Buttons");
 
-                // Resize the list buttons
-                for(int i = 1; i < list_container.getChildren().size()-1; i++) {
-                    HBox child_hbox = (HBox)list_container.getChildren().get(i);
-                    Button button = (Button)child_hbox.getChildren().get(0);
-                    button.setPrefWidth(child_hbox.getWidth());
+                    // Resize the list buttons
+                    for(int i = 0; i < list_container.getChildren().size()-1; i++) {
+                        HBox child_hbox = (HBox)list_container.getChildren().get(i);
+                        Button button = (Button)child_hbox.getChildren().get(0);
+                        button.setPrefWidth(child_hbox.getWidth());
+                    }
+
+                    // reset the mouse entered event
+                    list_container.setOnMouseEntered((MouseEvent ae) -> {});
                 }
-
-                // reset the mouse entered event
-                list_container.setOnMouseEntered((MouseEvent ae) -> {});
             });
         }
 
@@ -206,7 +208,7 @@ public class AllListsController implements Initializable{
         list_container.getChildren().get(list_container.getChildren().size()-1).setDisable(true);
         all_lists_edit.getStyleClass().add("edit_button_on");
 
-        for (cntr = 1; cntr < list_container.getChildren().size()-1; cntr++) {
+        for (cntr = 0; cntr < list_container.getChildren().size()-1; cntr++) {
             HBox child_list_hbox = (HBox)list_container.getChildren().get(cntr);
 
             String list_name = ((Button)child_list_hbox.getChildren().get(0)).getText().trim();
@@ -235,7 +237,7 @@ public class AllListsController implements Initializable{
     }
 
     private void concludeEditMode() {
-        for (cntr = 1; cntr < list_container.getChildren().size()-1; cntr++) {
+        for (cntr = 0; cntr < list_container.getChildren().size()-1; cntr++) {
             HBox child_list_hbox = (HBox)list_container.getChildren().get(cntr);
             TextField renamed_list = (TextField)child_list_hbox.getChildren().get(child_list_hbox.getChildren().size()-1);
 
@@ -249,7 +251,7 @@ public class AllListsController implements Initializable{
         System.out.println("Edit Mode Off");
         all_lists_edit.getStyleClass().remove("edit_button_on");
 
-        for (cntr = 1; cntr < list_container.getChildren().size()-1; cntr++) {
+        for (cntr = 0; cntr < list_container.getChildren().size()-1; cntr++) {
             HBox child_list_hbox = (HBox)list_container.getChildren().get(cntr);
 
             Button list_button = (Button)child_list_hbox.getChildren().get(0);
@@ -266,15 +268,15 @@ public class AllListsController implements Initializable{
                 } catch (IOException e1) {
             }});
 
-            db.updateList(old_list_names.get(cntr-1), list_button.getText(), null);
+            db.updateList(old_list_names.get(cntr), list_button.getText(), null);
 
-            if(list_statuses.get(old_list_names.get(cntr-1)) == true ) {
-                list_statuses.remove(old_list_names.get(cntr-1));
+            if(list_statuses.get(old_list_names.get(cntr)) == true ) {
+                list_statuses.remove(old_list_names.get(cntr));
                 list_statuses.put(list_button.getText(), true);
                 list_button.getStyleClass().add("checked_item");
             }
-            else if(list_statuses.get(old_list_names.get(cntr-1)) == false ) {
-                list_statuses.remove(old_list_names.get(cntr-1));
+            else if(list_statuses.get(old_list_names.get(cntr)) == false ) {
+                list_statuses.remove(old_list_names.get(cntr));
                 list_statuses.put(list_button.getText(), false);
             }
 

@@ -24,7 +24,8 @@ public class SQLController {
     private static final String CONNECTION_STRING = "mongodb+srv://alexisp30ples:<PASSWORD>@to-do-cluster-1.efhkz.mongodb.net/?retryWrites=true&w=majority&appName=To-Do-Cluster-1"; 
 
     private MongoClient mongoClient;
-    private MongoCollection<Document> collection;
+    private MongoCollection<Document> list_coll;
+    private MongoCollection<Document> settings_coll;
 
     /* Open a new connection to the database */
     public boolean openConnection(String password) {
@@ -32,7 +33,8 @@ public class SQLController {
         try {
             mongoClient = MongoClients.create(CONNECTION_STRING.replace("<PASSWORD>", password));
             MongoDatabase database = mongoClient.getDatabase("To-Do-Tracker");
-            collection = database.getCollection("Lists");
+            list_coll = database.getCollection("Lists");
+            settings_coll = database.getCollection("Settings");
             System.out.println("Connection opened successfully");
             result = true;
         } catch (Exception e) {
@@ -56,21 +58,21 @@ public class SQLController {
         return result;
     }
 
-    public boolean switchCollections(String coll_name) {
-        boolean result;
+    // public boolean switchCollections(String coll_name) {
+    //     boolean result;
 
-        try {
-            MongoDatabase database = mongoClient.getDatabase("To-Do-Tracker");
-            collection = database.getCollection(coll_name);
-            System.out.println("Switched connection to " + coll_name + " collection successfully");
-            result = true;
-        } catch (Exception e) {
-            System.out.println("Failed to switch to " + coll_name + " collection...");
-            closeConnection();
-            result = false;
-        }
-        return result;
-    }
+    //     try {
+    //         MongoDatabase database = mongoClient.getDatabase("To-Do-Tracker");
+    //         list_coll = database.getCollection(coll_name);
+    //         System.out.println("Switched connection to " + coll_name + " collection successfully");
+    //         result = true;
+    //     } catch (Exception e) {
+    //         System.out.println("Failed to switch to " + coll_name + " collection...");
+    //         closeConnection();
+    //         result = false;
+    //     }
+    //     return result;
+    // }
 
     /* Get all lists and their items from the database */
     // public Map<String, ArrayList<ListItem>> getAllLists() {
@@ -79,7 +81,7 @@ public class SQLController {
     //      */
     //     Map<String, ArrayList<ListItem>> lists = new TreeMap<>();
         
-    //     FindIterable<Document> docs = collection.find();
+    //     FindIterable<Document> docs = list_coll.find();
 
     //     for (Document doc : docs) {
     //         ArrayList<ListItem> items = new ArrayList<>();
@@ -108,7 +110,7 @@ public class SQLController {
     public ArrayList<String> getAllListNames() {
         ArrayList<String> lists = new ArrayList<>();
 
-        FindIterable<Document> docs = collection.find();
+        FindIterable<Document> docs = list_coll.find();
 
         for(Document doc : docs) {
             String title = doc.get("title").toString();
@@ -125,7 +127,7 @@ public class SQLController {
         BsonString str = new BsonString(list_name);
         BsonDocument filter = new BsonDocument("title", str);
 
-        Document doc = collection.find(filter).first();
+        Document doc = list_coll.find(filter).first();
 
         if(doc != null) {
             ArrayList<Document> temp = new ArrayList<>();
@@ -163,7 +165,7 @@ public class SQLController {
         new_list.append("title", list_name);
         new_list.append("items", items);
         
-        collection.insertOne(new_list);
+        list_coll.insertOne(new_list);
 
         System.out.println("Creation of list \"" + list_name + "\" was successful!");
     }
@@ -202,7 +204,7 @@ public class SQLController {
         updated_list.append("$set", updated_data);
 
         if(!updated_data.isEmpty()) {
-            collection.updateOne(filter, updated_list);
+            list_coll.updateOne(filter, updated_list);
             System.out.println("Update to list \"" + new_name + "\" was successful!");
         }
         else {
@@ -220,7 +222,7 @@ public class SQLController {
             display_message = true;
         }
 
-        collection.deleteOne(filter);
+        list_coll.deleteOne(filter);
 
         if(display_message) {
             System.out.println("Deletion of list \"" + list_name + "\" was successful!");
@@ -234,8 +236,30 @@ public class SQLController {
         BsonString bson_list_name = new BsonString(list_name);
         BsonDocument bson_list = new BsonDocument("title", bson_list_name);
         
-        if(collection.find(bson_list).first() != null) {
+        if(list_coll.find(bson_list).first() != null) {
             result = true;
+        }
+
+        return result;
+    }
+
+    /* Get the specified setting */ // TO-DO: Create Setting class and update this to return a Setting
+    public String GetSetting(String setting_name) {
+        String result = null;
+        Document setting;
+
+        BsonDocument filter = new BsonDocument();
+        BsonString name = new BsonString(setting_name);
+        filter.append("name", name);
+
+        setting = settings_coll.find(filter).first();
+
+        if(setting == null) {
+            System.err.println("Requested setting \"" + setting_name + "\" does not exist.");
+        }
+        else {
+            System.out.println("Setting found.");
+            result = setting.get("description").toString();
         }
 
         return result;
@@ -331,7 +355,7 @@ public class SQLController {
         document.append("items", christmas_items);
 
         if(!Exists(christmas)) {
-            collection.insertOne(document);
+            list_coll.insertOne(document);
 
             System.out.println("Creation of list \"" + christmas + "\" was successful!");
         }
@@ -351,7 +375,7 @@ public class SQLController {
         document.append("items", daily_items);
 
         if(!Exists(daily)) {
-            collection.insertOne(document);
+            list_coll.insertOne(document);
 
             System.out.println("Creation of list \"" + daily + "\" was successful!");
         }
